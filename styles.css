@@ -1,0 +1,15 @@
+body {
+    padding: 0;
+    margin: 0;
+}
+
+#menu {
+    min-height: 50px;
+    width: 100%;
+    background-color: #dfdfdf;
+}
+
+.menu_button {
+    min-height: 50px;
+    margin: 20px;
+}
