@@ -22,7 +22,7 @@
       "email": "alexliu54321@gmail.com"
     }
   ],
-  "license": "MIT",
+  "license": "All rights reserved",
   "dependencies": {
     "blockly": "^9.2.0",
     "electron-squirrel-startup": "^1.0.0"
