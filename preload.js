@@ -1,14 +1,16 @@
 const Blockly = require("blockly");
 window.addEventListener('DOMContentLoaded', () => {
-    const replaceText = (selector, text) => {
-        const element = document.getElementById(selector)
-        if (element) element.innerText = text
-    }
-
     console.log("Chromium version " + process.versions['chrome'])
     console.log("Node.js version " + process.versions['node'])
     console.log("Electron version " + process.versions['electron'])
+    document.getElementById("back-button").addEventListener("click", () => {
+        require('electron').ipcRenderer.send('go-to-home');
+    })
 
+    blockly();
+});
+
+function blockly() {
     const Blockly = require('blockly');
     const toolbox = {
         "kind": "flyoutToolbox",
@@ -65,4 +67,4 @@ window.addEventListener('DOMContentLoaded', () => {
     };
     window.addEventListener('resize', onresize, false);
     onresize();
-});
+}
