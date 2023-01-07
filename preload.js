@@ -12,39 +12,6 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function blockly() {
     const Blockly = require('blockly');
-    const toolbox = {
-        "kind": "flyoutToolbox",
-        "contents": [
-            {
-                "kind": "block",
-                "type": "controls_if"
-            },
-            {
-                "kind": "block",
-                "type": "controls_repeat_ext"
-            },
-            {
-                "kind": "block",
-                "type": "logic_compare"
-            },
-            {
-                "kind": "block",
-                "type": "math_number"
-            },
-            {
-                "kind": "block",
-                "type": "math_arithmetic"
-            },
-            {
-                "kind": "block",
-                "type": "text"
-            },
-            {
-                "kind": "block",
-                "type": "text_print"
-            },
-        ]
-    };
     const blocklyArea = document.getElementById('blockly-container');
     const blocklyDiv = document.getElementById('blockly-div');
     const workspace = Blockly.inject(blocklyDiv,

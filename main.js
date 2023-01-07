@@ -49,7 +49,6 @@ ipcMain.on('go-to-editor', e => {
             contextIsolation: false
         }
     })
-    win.preload = path.join(__dirname, 'workspace.js');
     win.loadFile('workspace.html').then();
     win.webContents.openDevTools()
 });
