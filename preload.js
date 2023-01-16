@@ -7,7 +7,7 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById("images-button").addEventListener("click", () => {
         // window.open("imagepopup.html", "name", 'height=200,width=400,scrollbars=yes')
-        idiv = document.getElementById("image-popup");
+        let idiv = document.getElementById("image-popup");
         idiv.style.visibility = "visible";
         idiv.style.pointerEvents = "auto";
     });
@@ -18,7 +18,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 function exp() {
-
+    let fs = require('fs');
 }
 
 function blockly() {
