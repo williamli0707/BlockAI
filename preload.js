@@ -19,6 +19,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
 function exp() {
     let fs = require('fs');
+
 }
 
 function blockly() {
@@ -187,7 +188,7 @@ function blockly() {
         var num_neurons = Blockly.JavaScript.valueToCode(block, 'num_neurons', Blockly.JavaScript.ORDER_ATOMIC)
         var value_activation = Blockly.JavaScript.valueToCode(block, 'activation', Blockly.JavaScript.ORDER_ATOMIC);
         // TODO: Assemble JavaScript into code variable.
-        var code = '...;\n';
+        var code = '\tcode;\n';
         return code;
     };
 
