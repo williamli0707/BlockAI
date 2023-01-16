@@ -14,7 +14,7 @@ const createHomeWindow = () => {
             // preload: path.join(__dirname, 'preload.js'),
             // preload: path.join(__dirname, 'home.js'),
             nodeIntegration: true,
-            contextIsolation: false
+            contextIsolation: false,
         }
     })
     win.loadFile('home.html').then();
@@ -57,3 +57,5 @@ ipcMain.on('go-to-home', e => {
     win.close();
     createHomeWindow();
 });
+
+//TODO: https://developers.google.com/blockly/guides/app-integration/attribution

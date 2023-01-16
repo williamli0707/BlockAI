@@ -1,19 +1,29 @@
 <!DOCTYPE html>
 <html lang="en-us">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://blockly-demo.appspot.com data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://blockly-demo.appspot.com https://cdn.jsdelivr.net data:;">
 <!--    <script defer id="blockly-script" src="https://unpkg.com/blockly/blockly.min.js"></script>-->
     <meta charset="UTF-8">
     <script defer src="./toolbox.js"></script>
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
     <title>Hello World!</title>
 </head>
 <body>
     <div id="content">
+        <div id="image-popup">
+
+        </div>
         <div id="menu">
             <div id="back">
-                <button id="back-button" class="menu-button">&#8249;</button>
+                <button id="back-button" class="menu-button btn btn-outline-primary">&#8249;</button>
+            </div>
+            <div id="images">
+                <button id="images-button" class="menu-button btn btn-outline-primary">Images</button>
+            </div>
+            <div id="run">
+                <button id="run-button" class="menu-button btn btn-outline-success">Run</button>
             </div>
         </div>
         <div id="blockly-container">

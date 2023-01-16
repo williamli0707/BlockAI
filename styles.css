@@ -7,6 +7,11 @@ body {
     display: flex;
     flex-flow: column;
     height: 100vh;
+    z-index: 10;
+}
+
+#content1 {
+
 }
 
 #menu {
@@ -14,6 +19,10 @@ body {
     width: 100%;
     background-color: #dfdfdf;
     flex: 0 1 auto;
+    display: flex;
+    flex-flow: row;
+    justify-content: center;
+    align-items: center;
 }
 
 #blockly-container {
@@ -25,9 +34,38 @@ body {
     position: absolute;
 }
 
+#run {
+    margin-left: auto;
+}
+
+#image-popup {
+    display: flex;
+    height: 80%;
+    width: 80%;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    border-color: aqua;
+    border-width: 5px;
+    border-style: solid;
+    position: absolute;
+    z-index: 1000;
+    pointer-events: none;
+    visibility: hidden;
+}
+
+#builton_img {
+    width: auto;
+    height: auto;
+    position: absolute;
+    max-height: 10vh;
+    max-width: 10vh;
+    right: 1%;
+    bottom: 1%;
+}
+
 .menu-button {
-    height: 30px;
-    width: 30px;
     margin: 10px;
     font-size: larger;
+    display: flex;
 }

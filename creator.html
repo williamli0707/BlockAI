@@ -2,12 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self';">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://blockly-demo.appspot.com https://cdn.jsdelivr.net data:;">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="node_modules/bootstrap/dist/css/bootstrap.css">
     <title>Title</title>
 </head>
 <body>
   <p>HTML for project creator screen</p>
-  <button id="ce-button">load workspace HTML</button>
+  <button id="ce-button" class="btn bg-primary btn-sm">load workspace HTML</button>
   <script src="creator.js"></script>
 </body>
 </html>

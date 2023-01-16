@@ -19,12 +19,14 @@
     },
     {
       "name": "Alex Liu",
-      "email": "alexliu54321@gmail.com"
+      "email": "liuaslex54321@gmail.com"
     }
   ],
   "license": "All rights reserved",
   "dependencies": {
+    "@blockly/field-slider": "^4.0.4",
     "blockly": "^9.2.0",
+    "bootstrap": "^5.3.0-alpha1",
     "electron-squirrel-startup": "^1.0.0"
   },
   "devDependencies": {
