@@ -10,17 +10,12 @@ body {
     z-index: 10;
 }
 
-#content1 {
-
-}
-
-#menu {
-    height: 50px;
+#img-content {
+    z-index: -5;
+    position: absolute;
+    height: 100%;
     width: 100%;
-    background-color: #dfdfdf;
-    flex: 0 1 auto;
     display: flex;
-    flex-flow: row;
     justify-content: center;
     align-items: center;
 }
@@ -40,16 +35,13 @@ body {
 
 #image-popup {
     display: flex;
-    height: 80%;
-    width: 80%;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    border-color: aqua;
-    border-width: 5px;
-    border-style: solid;
+    height: 90%;
+    width: 90%;
+    /*border-color: #C0C0C0;*/
+    /*border-width: 1px;*/
+    /*border-style: solid;*/
     position: absolute;
-    z-index: 1000;
+    z-index: 100;
     pointer-events: none;
     visibility: hidden;
 }
@@ -64,8 +56,22 @@ body {
     bottom: 1%;
 }
 
+#close-button {
+    margin-left: auto;
+}
+
 .menu-button {
     margin: 10px;
     font-size: larger;
     display: flex;
+}
+
+.menu {
+    height: 50px;
+    width: 100%;
+    background-color: #dfdfdf;
+    flex: 0 1 auto;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
 }

@@ -7,10 +7,11 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById("images-button").addEventListener("click", () => {
         // window.open("imagepopup.html", "name", 'height=200,width=400,scrollbars=yes')
-        let idiv = document.getElementById("image-popup");
-        idiv.style.visibility = "visible";
-        idiv.style.pointerEvents = "auto";
+        openImagePopup();
     });
+    document.getElementById("close-button").addEventListener("click", () => {
+        closeImagePopup();
+    })
     document.getElementById("run-button").addEventListener("click", () => {
         exp();
     });
@@ -20,6 +21,20 @@ window.addEventListener('DOMContentLoaded', () => {
 function exp() {
     let fs = require('fs');
 
+}
+
+function openImagePopup() {
+    let idiv = document.getElementById("image-popup");
+    idiv.style.visibility = "visible";
+    idiv.style.pointerEvents = "all";
+    idiv.style.zIndex = "101";
+    document.getElementById("img-content").style.zIndex = "100";
+}
+function closeImagePopup() {
+    let idiv = document.getElementById("image-popup");
+    idiv.style.visibility = "hidden";
+    idiv.style.pointerEvents = "none";
+    document.getElementById("img-content").style.zIndex = "-5";
 }
 
 function blockly() {
