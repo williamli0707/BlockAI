@@ -1,4 +1,5 @@
 let xhr;
+var files;
 
 function setURL(url) {
     let xhr = new XMLHttpRequest();
