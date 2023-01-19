@@ -1,3 +1,8 @@
+/**
+ * namespace for code
+ */
+var Code = {};
+
 window.addEventListener('DOMContentLoaded', () => {
     console.log("Chromium version " + process.versions['chrome'])
     console.log("Node.js version " + process.versions['node'])
@@ -13,38 +18,66 @@ window.addEventListener('DOMContentLoaded', () => {
     //     closeImagePopup();
     // })
     document.getElementById("run-button").addEventListener("click", () => {
-        exp();
+        Code.exp();
     });
-    blockly();
+    Code.blockly();
 });
 
-function exp() {
+Code.setURL = function(url) {
+    Code.xhr.open('GET', url);
+}
+
+Code.stopProp = function(ev) {
+    ev.stopPropagation();
+    ev.preventDefault();
+}
+
+Code.updateProgress = function(ev) {
+    if (ev.lengthComputable) {
+        const percentComplete = (ev.loaded / ev.total) * 100;
+    } 
+    else {
+      // Unable to compute progress information since the total size is unknown
+    }
+  }
+  
+Code.transferComplete = function(ev) {
+    console.log("The transfer is complete.");
+}
+
+Code.transferFailed = function(ev) {
+    console.log("An error occurred while transferring the file.");
+}
+
+Code.transferCanceled = function(ev) {
+    console.log("The transfer has been canceled by the user.");
+}
+
+Code.exp = function(){    // export stuff to server
     let fs = require('fs');
+    var code = Blockly.JavaScript.workspaceToCode(Code.workspace);  // user's code translated to javascript
 
+    Code.xhr = new XMLHttpRequest();
+
+    xhr.addEventListener("progress", Code.updateProgress);
+    xhr.addEventListener("load", Code.transferComplete);
+    xhr.addEventListener("error", Code.transferFailed);
+    xhr.addEventListener("abort", Code.transferCanceled);
+
+    /**
+     * TODO: setup url to export to
+     */
+    Code.setURL(Code.url);
 }
 
-function openImagePopup() {
-    let idiv = document.getElementById("image-popup");
-    idiv.style.visibility = "visible";
-    idiv.style.pointerEvents = "all";
-    idiv.style.zIndex = "101";
-    document.getElementById("img-content").style.zIndex = "100";
-}
-function closeImagePopup() {
-    let idiv = document.getElementById("image-popup");
-    idiv.style.visibility = "hidden";
-    idiv.style.pointerEvents = "none";
-    document.getElementById("img-content").style.zIndex = "-5";
-}
-
-function blockly() {
-    const Blockly = require('blockly');
-    const javascriptGenerator = require('blockly/javascript');
+Code.blockly = function() {
+    Code.Blockly = require('blockly');
+    Code.javascriptGenerator = require('blockly/javascript');
     require('@blockly/field-slider');
     const blocklyArea = document.getElementById('blockly-container');
     const blocklyDiv = document.getElementById('blockly-div');
 
-    Blockly.defineBlocksWithJsonArray([
+    Code.Blockly.defineBlocksWithJsonArray([
         {
             "type": "conv2d",
             "kind": "block",
@@ -177,29 +210,29 @@ function blockly() {
         }
     ]);
 
-    javascriptGenerator['conv2d'] = function(block) {
+    Code.javascriptGenerator['conv2d'] = function(block) {
         var value_activation = Blockly.JavaScript.valueToCode(block, 'activation', Blockly.JavaScript.ORDER_ATOMIC);
         // TODO: Assemble JavaScript into code variable.
         var code = '\ttf.keras.layers.Conv2D(activation=\'relu\'),\n';
         return code;
     };
-    javascriptGenerator['maxpooling2d'] = function(block) {
+    Code.javascriptGenerator['maxpooling2d'] = function(block) {
         // TODO: Assemble JavaScript into code variable.
         var code = '\ttf.keras.layers.MaxPooling2D(),\n';
         return code;
     };
-    javascriptGenerator['flatten'] = function(block) {
+    Code.javascriptGenerator['flatten'] = function(block) {
         // TODO: Assemble JavaScript into code variable.
         var code = '\ttf.keras.layers.Flatten(),\n';
         return code;
     };
-    javascriptGenerator['dropout'] = function(block) {
+    Code.javascriptGenerator['dropout'] = function(block) {
         var value_rate = Blockly.JavaScript.valueToCode(block, 'rate', Blockly.JavaScript.ORDER_ATOMIC);
         // TODO: Assemble JavaScript into code variable.
         var code = '\ttf.keras.layers.Dropout(' + value_rate + '),\n';
         return code;
     };
-    javascriptGenerator['dense'] = function(block) {
+    Code.javascriptGenerator['dense'] = function(block) {
         var num_neurons = Blockly.JavaScript.valueToCode(block, 'num_neurons', Blockly.JavaScript.ORDER_ATOMIC)
         var value_activation = Blockly.JavaScript.valueToCode(block, 'activation', Blockly.JavaScript.ORDER_ATOMIC);
         // TODO: Assemble JavaScript into code variable.
@@ -207,16 +240,16 @@ function blockly() {
         return code;
     };
 
-    javascriptGenerator['cnn_model'] = function(block) {
+   Code.javascriptGenerator['cnn_model'] = function(block) {
         var statements_layers = Blockly.JavaScript.statementToCode(block, 'layers');
         var code = '...;\n';
         return code;
     };
 
-    const workspace = Blockly.inject(blocklyDiv,
+    Code.workspace = Code.Blockly.inject(blocklyDiv,
         {toolbox: toolbox});
-    console.log(javascriptGenerator)
-    const onresize = function(e) {
+    console.log(Code.javascriptGenerator)
+    Code.onresize = function(e) {
         // Compute the absolute coordinates and dimensions of blocklyArea.
         let element = blocklyArea;
         let x = 0;
@@ -230,8 +263,8 @@ function blockly() {
         blocklyDiv.style.top = y + 'px';
         blocklyDiv.style.width = blocklyArea.offsetWidth + 'px';
         blocklyDiv.style.height = blocklyArea.offsetHeight + 'px';
-        Blockly.svgResize(workspace);
+        Code.Blockly.svgResize(Code.workspace);
     };
     window.addEventListener('resize', onresize, false);
-    onresize();
+    Code.onresize();
 }

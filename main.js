@@ -58,4 +58,5 @@ ipcMain.on('go-to-home', e => {
     createHomeWindow();
 });
 
+// test
 //TODO: https://developers.google.com/blockly/guides/app-integration/attribution
