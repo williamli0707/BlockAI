@@ -68,34 +68,6 @@ Code.exp = function(){    // export stuff to server
      * TODO: setup url to export to
      */
     Code.setURL(Code.url);
-
-    
-}
-function openImagePopup() {
-    let idiv = document.getElementById("image-popup");
-    idiv.style.visibility = "visible";
-    idiv.style.pointerEvents = "all";
-    idiv.style.zIndex = "101";
-    document.getElementById("img-content").style.zIndex = "100";
-}
-function closeImagePopup() {
-    let idiv = document.getElementById("image-popup");
-    idiv.style.visibility = "hidden";
-    idiv.style.pointerEvents = "none";
-    document.getElementById("img-content").style.zIndex = "-5";
-}
-function openImagePopup() {
-    let idiv = document.getElementById("image-popup");
-    idiv.style.visibility = "visible";
-    idiv.style.pointerEvents = "all";
-    idiv.style.zIndex = "101";
-    document.getElementById("img-content").style.zIndex = "100";
-}
-function closeImagePopup() {
-    let idiv = document.getElementById("image-popup");
-    idiv.style.visibility = "hidden";
-    idiv.style.pointerEvents = "none";
-    document.getElementById("img-content").style.zIndex = "-5";
 }
 
 Code.blockly = function() {
