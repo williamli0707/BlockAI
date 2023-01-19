@@ -10,15 +10,6 @@ body {
     z-index: 10;
 }
 
-#img-content {
-    z-index: -5;
-    position: absolute;
-    height: 100%;
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-}
 
 #blockly-container {
     flex: 1 1 auto;

@@ -5,13 +5,13 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("back-button").addEventListener("click", () => {
         require('electron').ipcRenderer.send('go-to-home');
     });
-    document.getElementById("images-button").addEventListener("click", () => {
-        // window.open("imagepopup.html", "name", 'height=200,width=400,scrollbars=yes')
-        openImagePopup();
-    });
-    document.getElementById("close-button").addEventListener("click", () => {
-        closeImagePopup();
-    })
+    // document.getElementById("images-button").addEventListener("click", () => {
+    //     // window.open("imagepopup.html", "name", 'height=200,width=400,scrollbars=yes')
+    //     document.getElementById("")
+    // });
+    // document.getElementById("close-button").addEventListener("click", () => {
+    //     closeImagePopup();
+    // })
     document.getElementById("run-button").addEventListener("click", () => {
         exp();
     });
