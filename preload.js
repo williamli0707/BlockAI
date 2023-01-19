@@ -10,13 +10,6 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("back-button").addEventListener("click", () => {
         require('electron').ipcRenderer.send('go-to-home');
     });
-    // document.getElementById("images-button").addEventListener("click", () => {
-    //     // window.open("imagepopup.html", "name", 'height=200,width=400,scrollbars=yes')
-    //     document.getElementById("")
-    // });
-    // document.getElementById("close-button").addEventListener("click", () => {
-    //     closeImagePopup();
-    // })
     document.getElementById("run-button").addEventListener("click", () => {
         Code.exp();
     });
@@ -56,13 +49,13 @@ Code.transferCanceled = function(ev) {
 Code.exp = function(){    // export stuff to server
     let fs = require('fs');
     var code = Blockly.JavaScript.workspaceToCode(Code.workspace);  // user's code translated to javascript
-
+    console.log(code);
     Code.xhr = new XMLHttpRequest();
 
-    xhr.addEventListener("progress", Code.updateProgress);
-    xhr.addEventListener("load", Code.transferComplete);
-    xhr.addEventListener("error", Code.transferFailed);
-    xhr.addEventListener("abort", Code.transferCanceled);
+    Code.xhr.addEventListener("progress", Code.updateProgress);
+    Code.xhr.addEventListener("load", Code.transferComplete);
+    Code.xhr.addEventListener("error", Code.transferFailed);
+    Code.xhr.addEventListener("abort", Code.transferCanceled);
 
     /**
      * TODO: setup url to export to
@@ -210,29 +203,29 @@ Code.blockly = function() {
         }
     ]);
 
-    Code.javascriptGenerator['conv2d'] = function(block) {
+    Blockly.JavaScript['conv2d'] = function(block) {
         var value_activation = Blockly.JavaScript.valueToCode(block, 'activation', Blockly.JavaScript.ORDER_ATOMIC);
         // TODO: Assemble JavaScript into code variable.
-        var code = '\ttf.keras.layers.Conv2D(activation=\'relu\'),\n';
+        var code = '\ttf.keras.layers.Conv2D(activation=\'' + value_activation + '\'),\n';
         return code;
     };
-    Code.javascriptGenerator['maxpooling2d'] = function(block) {
+    Blockly.JavaScript['maxpooling2d'] = function(block) {
         // TODO: Assemble JavaScript into code variable.
         var code = '\ttf.keras.layers.MaxPooling2D(),\n';
         return code;
     };
-    Code.javascriptGenerator['flatten'] = function(block) {
+    Blockly.JavaScript['flatten'] = function(block) {
         // TODO: Assemble JavaScript into code variable.
         var code = '\ttf.keras.layers.Flatten(),\n';
         return code;
     };
-    Code.javascriptGenerator['dropout'] = function(block) {
+    Blockly.JavaScript['dropout'] = function(block) {
         var value_rate = Blockly.JavaScript.valueToCode(block, 'rate', Blockly.JavaScript.ORDER_ATOMIC);
         // TODO: Assemble JavaScript into code variable.
         var code = '\ttf.keras.layers.Dropout(' + value_rate + '),\n';
         return code;
     };
-    Code.javascriptGenerator['dense'] = function(block) {
+    Blockly.JavaScript['dense'] = function(block) {
         var num_neurons = Blockly.JavaScript.valueToCode(block, 'num_neurons', Blockly.JavaScript.ORDER_ATOMIC)
         var value_activation = Blockly.JavaScript.valueToCode(block, 'activation', Blockly.JavaScript.ORDER_ATOMIC);
         // TODO: Assemble JavaScript into code variable.
@@ -240,9 +233,9 @@ Code.blockly = function() {
         return code;
     };
 
-   Code.javascriptGenerator['cnn_model'] = function(block) {
+    Blockly.JavaScript['cnn_model'] = function(block) {
         var statements_layers = Blockly.JavaScript.statementToCode(block, 'layers');
-        var code = '...;\n';
+        var code = 'model = tf.keras.models.Sequential([\n' + statements_layers + ']);\n';
         return code;
     };
 
