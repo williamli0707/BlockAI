@@ -22,12 +22,54 @@ window.addEventListener('DOMContentLoaded', () => {
     Code.blockly();
 });
 
+Code.setURL = function(url) {
+    Code.xhr.open('GET', url);
+}
+
+Code.stopProp = function(ev) {
+    ev.stopPropagation();
+    ev.preventDefault();
+}
+
+Code.updateProgress = function(ev) {
+    if (ev.lengthComputable) {
+        const percentComplete = (ev.loaded / ev.total) * 100;
+    } 
+    else {
+      // Unable to compute progress information since the total size is unknown
+    }
+  }
+  
+Code.transferComplete = function(ev) {
+    console.log("The transfer is complete.");
+}
+
+Code.transferFailed = function(ev) {
+    console.log("An error occurred while transferring the file.");
+}
+
+Code.transferCanceled = function(ev) {
+    console.log("The transfer has been canceled by the user.");
+}
+
 Code.exp = function(){    // export stuff to server
     let fs = require('fs');
+    var code = Blockly.JavaScript.workspaceToCode(Code.workspace);  // user's code translated to javascript
 
-    var code = Code.javascriptGenerator.workspaceToCode(Code.workspace);  // user's code translated to javascript
+    Code.xhr = new XMLHttpRequest();
+
+    xhr.addEventListener("progress", Code.updateProgress);
+    xhr.addEventListener("load", Code.transferComplete);
+    xhr.addEventListener("error", Code.transferFailed);
+    xhr.addEventListener("abort", Code.transferCanceled);
+
+    /**
+     * TODO: setup url to export to
+     */
+    Code.setURL(Code.url);
+
+    
 }
-// test
 
 Code.blockly = function() {
     Code.Blockly = require('blockly');
