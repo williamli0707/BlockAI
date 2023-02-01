@@ -20,10 +20,8 @@ window.addEventListener('DOMContentLoaded', () => {
     Code.blockly();
 });
 
-Code.uploadImages = function() {
-    /**
-     * TODO: uplaod images
-     */
+Code.uploadImages() = function() {
+    
 }
 
 Code.setURL = function(url) {
