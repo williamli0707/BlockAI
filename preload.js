@@ -20,7 +20,7 @@ window.addEventListener('DOMContentLoaded', () => {
     Code.blockly();
 });
 
-Code.uploadImages() = function() {
+Code.uploadImages = function() {
     
 }
 
