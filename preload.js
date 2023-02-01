@@ -16,12 +16,14 @@ window.addEventListener('DOMContentLoaded', () => {
     });
     document.getElementById("imagesUploadYes").addEventListener("click", () => {
         Code.uploadImages();
-    }) 
+    });
     Code.blockly();
 });
 
-Code.uploadImages() = function() {
-    
+Code.uploadImages = function() {
+    /**
+     * TODO: uplaod images
+     */
 }
 
 Code.setURL = function(url) {
@@ -40,7 +42,7 @@ Code.updateProgress = function(ev) {
     else {
       // Unable to compute progress information since the total size is unknown
     }
-  }
+}
   
 Code.transferComplete = function(ev) {
     console.log("The transfer is complete.");
@@ -54,7 +56,7 @@ Code.transferCanceled = function(ev) {
     console.log("The transfer has been canceled by the user.");
 }
 
-Code.exp = function(){    // export stuff to server
+Code.exp = function() {    // export stuff to server
     let fs = require('fs');
     var code = Blockly.JavaScript.workspaceToCode(Code.workspace);  // user's code translated to javascript
     console.log(code);
