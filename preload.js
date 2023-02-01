@@ -2,6 +2,7 @@
  * namespace for code
  */
 var Code = {};
+Code.url = "http://www.blockai.great-site.net";
 
 window.addEventListener('DOMContentLoaded', () => {
     console.log("Chromium version " + process.versions['chrome'])
@@ -10,11 +11,18 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("back-button").addEventListener("click", () => {
         require('electron').ipcRenderer.send('go-to-home');
     });
-    document.getElementById("run-button").addEventListener("click", () => {
+    document.getElementById("runConfirmYes").addEventListener("click", () => {
         Code.exp();
     });
+    document.getElementById("imagesUploadYes").addEventListener("click", () => {
+        Code.uploadImages();
+    }) 
     Code.blockly();
 });
+
+Code.uploadImages() = function() {
+    
+}
 
 Code.setURL = function(url) {
     Code.xhr.open('GET', url);
@@ -61,6 +69,7 @@ Code.exp = function(){    // export stuff to server
      * TODO: setup url to export to
      */
     Code.setURL(Code.url);
+    Code.xhr.send(code);
 }
 
 Code.blockly = function() {
