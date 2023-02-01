@@ -13,19 +13,39 @@
 </head>
 <body>
     <div id="img-content">
-        <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
-            <div class="modal-dialog">
+
+        <div class="modal fade" id="imagesModal" tabindex="-1" aria-labelledby="imagesModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="exampleModalLabel">Images</h5>
+                        <h5 class="modal-title" id="imagesModalLabel">Images</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         ...
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" class="btn btn-primary">Upload</button>
+                        <button type="button" id="imagesUplaodeNo" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" id="imagesUploadYes" class="btn btn-primary">Upload</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div id="run-content">
+        <div class="modal fade" id="runConfirmModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="runConfirmModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-scrollable modal-sm">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="runConfirmModalLabel">Confirmation</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Do you want to build your code?</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" id="runConfirmNo" class="btn btn-outline-danger" data-bs-dismiss="modal">No</button>
+                        <button type="button" id="runConfirmYes" class="btn btn-primary" data-bs-dismiss="modal">Yes</button>
                     </div>
                 </div>
             </div>
@@ -37,10 +57,10 @@
                 <button id="back-button" class="menu-button btn btn-outline-primary">&#8249;</button>
             </div>
             <div id="images">
-                <button type="button" id="images-button" class="menu-button btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">Images</button>
+                <button type="button" id="images-button" class="menu-button btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#imagesModal">Images</button>
             </div>
             <div id="run">
-                <button id="run-button" class="menu-button btn btn-outline-success">Run</button>
+                <button type="button" id="run-button" class="menu-button btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#runConfirmModal">Run</button>
             </div>
         </div>
         <div id="blockly-container">
