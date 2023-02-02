@@ -21,7 +21,7 @@ window.addEventListener('DOMContentLoaded', () => {
 });
 
 Code.uploadImages = function() {
-    
+
 }
 
 Code.setURL = function(url) {
@@ -58,18 +58,28 @@ Code.exp = function(){    // export stuff to server
     let fs = require('fs');
     var code = Blockly.JavaScript.workspaceToCode(Code.workspace);  // user's code translated to javascript
     console.log(code);
-    Code.xhr = new XMLHttpRequest();
-
-    Code.xhr.addEventListener("progress", Code.updateProgress);
-    Code.xhr.addEventListener("load", Code.transferComplete);
-    Code.xhr.addEventListener("error", Code.transferFailed);
-    Code.xhr.addEventListener("abort", Code.transferCanceled);
-
-    /**
-     * TODO: setup url to export to
-     */
-    Code.setURL(Code.url);
-    Code.xhr.send(code);
+    // Code.xhr = new XMLHttpRequest();
+    //
+    // Code.xhr.addEventListener("progress", Code.updateProgress);
+    // Code.xhr.addEventListener("load", Code.transferComplete);
+    // Code.xhr.addEventListener("error", Code.transferFailed);
+    // Code.xhr.addEventListener("abort", Code.transferCanceled);
+    //
+    // /**
+    //  * TODO: setup url to export to
+    //  */
+    // Code.setURL(Code.url);
+    // Code.xhr.send(code);
+    var xhr = new window.XMLHttpRequest();
+    xhr.open('POST', 'http://localhost:3000/', true);
+    xhr.responseType = 'json';
+    xhr.setRequestHeader('Content-Type', 'application/json')
+    xhr.onload = () => console.log(xhr.status);
+    xhr.send(JSON.stringify({
+        "Id": 23425,
+        "code": code,
+    }));
+    console.log(xhr);
 }
 
 Code.blockly = function() {
@@ -267,6 +277,6 @@ Code.blockly = function() {
         blocklyDiv.style.height = blocklyArea.offsetHeight + 'px';
         Code.Blockly.svgResize(Code.workspace);
     };
-    window.addEventListener('resize', onresize, false);
+    window.addEventListener('resize', Code.onresize, false);
     Code.onresize();
 }
