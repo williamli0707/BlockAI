@@ -2,7 +2,11 @@
  * namespace for code
  */
 var Code = {};
-Code.url = "http://www.blockai.great-site.net";
+const { app, ipcRenderer, systemPreferences } = require('electron');
+const fs = require('fs');
+const path = require("path");
+
+// Code.url = "http://www.blockai.great-site.net";
 
 window.addEventListener('DOMContentLoaded', () => {
     console.log("Chromium version " + process.versions['chrome'])
@@ -17,11 +21,34 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("imagesUploadYes").addEventListener("click", () => {
         Code.uploadImages();
     });
+    document.getElementById("imagesModal").addEventListener("shown.bs.modal", () => {
+        Code.loadImages();
+    });
+    document.getElementById("imagesModal").addEventListener("hidden.bs.modal", () => {
+        Code.unloadImages();
+    });
     Code.blockly();
 });
 
-Code.uploadImages() = function() {
-    
+ipcRenderer.on('call-display-image', (event, imagePath) => {
+    const src = '<img src="' + imagePath + '"/>';
+    document.getElementById('image-container').insertAdjacentHTML('beforeend', src);
+});
+
+Code.unloadImages = function() {
+    var childDivs = document.getElementById('image-container').getElementsByTagName('img');
+
+    while(childDivs.length) {
+        childDivs[0].remove();
+    }
+}
+
+Code.loadImages = function() {
+    ipcRenderer.send('load-images');
+}
+
+Code.uploadImages = function() {
+    ipcRenderer.send('image-upload');
 }
 
 Code.setURL = function(url) {
@@ -75,6 +102,7 @@ Code.exp = function() {    // export stuff to server
 Code.blockly = function() {
     Code.Blockly = require('blockly');
     Code.javascriptGenerator = require('blockly/javascript');
+    Code.path = require("path");
     require('@blockly/field-slider');
     const blocklyArea = document.getElementById('blockly-container');
     const blocklyDiv = document.getElementById('blockly-div');

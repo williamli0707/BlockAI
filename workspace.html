@@ -13,7 +13,6 @@
 </head>
 <body>
     <div id="img-content">
-
         <div class="modal fade" id="imagesModal" tabindex="-1" aria-labelledby="imagesModalLabel" aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable modal-xl">
                 <div class="modal-content">
@@ -21,7 +20,7 @@
                         <h5 class="modal-title" id="imagesModalLabel">Images</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body" id="image-container" class="image-container">
                         ...
                     </div>
                     <div class="modal-footer">
@@ -67,5 +66,9 @@
             <div id="blockly-div"></div>
         </div>
     </div>
+
+    <script>
+        require('./preload.js');
+    </script>
 </body>
 </html>
