@@ -15,31 +15,62 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("back-button").addEventListener("click", () => {
         require('electron').ipcRenderer.send('go-to-home');
     });
-    document.getElementById("runConfirmYes").addEventListener("click", () => {
+    document.getElementById("run-confirm-yes").addEventListener("click", () => {
         Code.exp();
     });
-    document.getElementById("imagesUploadYes").addEventListener("click", () => {
+    document.getElementById("images-upload-yes").addEventListener("click", () => {
         Code.uploadImages();
     });
-    document.getElementById("imagesModal").addEventListener("shown.bs.modal", () => {
+    document.getElementById("images-modal").addEventListener("shown.bs.modal", () => {
         Code.loadImages();
     });
-    document.getElementById("imagesModal").addEventListener("hidden.bs.modal", () => {
+    document.getElementById("images-modal").addEventListener("hidden.bs.modal", () => {
         Code.unloadImages();
     });
     Code.blockly();
 });
 
 ipcRenderer.on('call-display-image', (event, imagePath) => {
-    const src = '<img src="' + imagePath + '"/>';
-    document.getElementById('image-container').insertAdjacentHTML('beforeend', src);
+    const newDiv = document.createElement("div");
+    newDiv.classList.add('image-div');
+
+    const imgNode = document.createElement("img");
+    imgNode.src = imagePath;
+    imgNode.classList.add('image');
+
+    const deleteNode = document.createElement("button");
+    deleteNode.innerHTML = '<img src="./images/trashcan_icon.png" class="image"/>';
+    deleteNode.classList.add('delete-button');
+
+    imgNode.addEventListener("mouseover", () => {
+        deleteNode.style.visibility = 'visible';
+    });
+    imgNode.addEventListener("mouseout", () => {
+        deleteNode.style.visibility = 'hidden';
+    }); 
+
+    deleteNode.addEventListener("mouseover", () => {
+        deleteNode.style.visibility = 'visible';
+    });
+    deleteNode.addEventListener("mouseout", () => {
+        deleteNode.style.visibility = 'hidden';
+    });
+
+    newDiv.appendChild(imgNode);
+    newDiv.appendChild(deleteNode);
+    document.getElementById('image-container').appendChild(newDiv);
+
+    deleteNode.addEventListener("click", () => {
+        newDiv.remove();
+        fs.unlinkSync(imagePath);
+    });
 });
 
 Code.unloadImages = function() {
-    var childDivs = document.getElementById('image-container').getElementsByTagName('img');
+    var imageContainer = document.getElementById('image-container').children;
 
-    while(childDivs.length) {
-        childDivs[0].remove();
+    while(imageContainer.length) {
+        imageContainer[0].remove();
     }
 }
 
