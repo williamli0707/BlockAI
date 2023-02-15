@@ -63,6 +63,7 @@ ipcRenderer.on('call-display-image', (event, imagePath) => {
     deleteNode.addEventListener("click", () => {
         newDiv.remove();
         fs.unlinkSync(imagePath);
+        console.log("removing " + imagePath);
     });
 });
 

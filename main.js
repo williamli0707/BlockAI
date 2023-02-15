@@ -113,8 +113,8 @@ ipcMain.on('image-upload', (event, arg) => {
             // copy file from original location to app data folder
             fs.copyFile(filePath, imgFolderPath, (err) => {
                 if (err) throw err;
-                // console.log(fileName + ' uploaded.');
-                event.sender.send('call-display-image', filePath);
+                console.log(filePath + ' uploaded to ' + imgFolderPath);
+                event.sender.send('call-display-image', imgFolderPath);
             });
         }  
     }).catch(err => {
