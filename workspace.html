@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html lang="en-us">
 <head>
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://blockly-demo.appspot.com https://cdn.jsdelivr.net https://unpkg.com http://localhost:3000 data:;">
+    <meta http-equiv="Content-Security-Policy" content="default-src 'self' 'unsafe-inline' https://blockly-demo.appspot.com https://cdn.jsdelivr.net https://unpkg.com http://localhost:3000 http://192.9.249.213:3000 data:;">
     <script defer id="blockly-script" src="https://unpkg.com/blockly/blockly.min.js"></script>
     <meta charset="UTF-8">
     <script defer src="./toolbox.js"></script>
+    <script defer src="./blocks.js"></script>
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <link rel="stylesheet" href="styles.css">
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js" crossorigin="anonymous"></script>
@@ -13,39 +14,38 @@
 </head>
 <body>
     <div id="img-content">
-
-        <div class="modal fade" id="imagesModal" tabindex="-1" aria-labelledby="imagesModalLabel" aria-hidden="true">
+        <div class="modal fade" id="images-modal" tabindex="-1" aria-labelledby="images-modal-label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable modal-xl">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="imagesModalLabel">Images</h5>
+                        <h5 class="modal-title" id="images-modal-label">Images</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
-                    <div class="modal-body">
+                    <div class="modal-body" id="image-container" class="image-container">
                         ...
                     </div>
                     <div class="modal-footer">
-                        <button type="button" id="imagesUplaodeNo" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                        <button type="button" id="imagesUploadYes" class="btn btn-primary">Upload</button>
+                        <button type="button" id="images-uplaode-no" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" id="images-upload-yes" class="btn btn-primary">Upload</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
     <div id="run-content">
-        <div class="modal fade" id="runConfirmModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="runConfirmModalLabel" aria-hidden="true">
+        <div class="modal fade" id="run-confirm-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="run-confirm-modal-label" aria-hidden="true">
             <div class="modal-dialog modal-dialog-scrollable modal-sm">
                 <div class="modal-content">
                     <div class="modal-header">
-                        <h5 class="modal-title" id="runConfirmModalLabel">Confirmation</h5>
+                        <h5 class="modal-title" id="run-confirm-modal-label">Confirmation</h5>
                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                     </div>
                     <div class="modal-body">
                         <p>Do you want to build your code?</p>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" id="runConfirmNo" class="btn btn-outline-danger" data-bs-dismiss="modal">No</button>
-                        <button type="button" id="runConfirmYes" class="btn btn-primary" data-bs-dismiss="modal">Yes</button>
+                        <button type="button" id="run-confirm-no" class="btn btn-outline-danger" data-bs-dismiss="modal">No</button>
+                        <button type="button" id="run-confirm-yes" class="btn btn-primary" data-bs-dismiss="modal">Yes</button>
                     </div>
                 </div>
             </div>
@@ -57,15 +57,19 @@
                 <button id="back-button" class="menu-button btn btn-outline-primary">&#8249;</button>
             </div>
             <div id="images">
-                <button type="button" id="images-button" class="menu-button btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#imagesModal">Images</button>
+                <button type="button" id="images-button" class="menu-button btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#images-modal">Images</button>
             </div>
             <div id="run">
-                <button type="button" id="run-button" class="menu-button btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#runConfirmModal">Run</button>
+                <button type="button" id="run-button" class="menu-button btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#run-confirm-modal">Run</button>
             </div>
         </div>
         <div id="blockly-container">
             <div id="blockly-div"></div>
         </div>
     </div>
+
+    <script>
+        require('./preload.js');
+    </script>
 </body>
 </html>

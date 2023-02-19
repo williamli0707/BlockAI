@@ -3,6 +3,34 @@ const toolbox = {
     "contents": [
         {
             "kind": "category",
+            "name": "Data",
+            contents: [
+                {
+                    "type": "loadset",
+                    "kind": "block",
+                },
+                {
+                    "type": "heatmap",
+                    "kind": "block",
+                }
+            ]
+        },
+        {
+            "kind": "category",
+            "name": "Datasets",
+            contents: [
+                {
+                    "type": "cifar_10",
+                    "kind": "block",
+                },
+                {
+                    "type": "mnist",
+                    "kind": "block",
+                }
+            ]
+        },
+        {
+            "kind": "category",
             "name": "Models",
             contents: [
                 {
