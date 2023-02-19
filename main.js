@@ -15,7 +15,8 @@ const createHomeWindow = () => {
             // preload: path.join(__dirname, 'home.js'),
             nodeIntegration: true,
             contextIsolation: false,
-        }
+        },
+        // titleBarStyle: "hidden"
     })
     win.loadFile('home.html').then();
     win.webContents.openDevTools();
@@ -47,7 +48,8 @@ ipcMain.on('go-to-editor', e => {
             preload: path.join(__dirname, 'preload.js'),
             nodeIntegration: true,
             contextIsolation: false
-        }
+        },
+        // titleBarStyle: "hidden"
     })
     win.loadFile('workspace.html').then();
     win.webContents.openDevTools()

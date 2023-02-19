@@ -54,32 +54,36 @@ Code.transferCanceled = function(ev) {
     console.log("The transfer has been canceled by the user.");
 }
 
+Code.sendHTTPRequest = function(method, url, data) {
+    const promise = new Promise((resolve, reject) => {
+        const xhr = new window.XMLHttpRequest();
+        xhr.open(method, url, true);
+
+        xhr.responseType = 'json';
+
+        if(data) {
+            xhr.setRequestHeader('Content-Type', 'application/json')
+        }
+
+        xhr.onload = () => {
+            console.log(xhr.status);
+            resolve(xhr.response);
+        }
+
+        xhr.onerror = () => {
+            reject("error - something went wrong");
+        }
+
+        xhr.send(JSON.stringify(data));
+    });
+    return promise;
+}
+
 Code.exp = function(){    // export stuff to server
-    let fs = require('fs');
-    var code = Blockly.JavaScript.workspaceToCode(Code.workspace);  // user's code translated to javascript
-    console.log(code);
-    // Code.xhr = new XMLHttpRequest();
-    //
-    // Code.xhr.addEventListener("progress", Code.updateProgress);
-    // Code.xhr.addEventListener("load", Code.transferComplete);
-    // Code.xhr.addEventListener("error", Code.transferFailed);
-    // Code.xhr.addEventListener("abort", Code.transferCanceled);
-    //
-    // /**
-    //  * TODO: setup url to export to
-    //  */
-    // Code.setURL(Code.url);
-    // Code.xhr.send(code);
-    var xhr = new window.XMLHttpRequest();
-    xhr.open('POST', 'http://localhost:3000/', true);
-    xhr.responseType = 'json';
-    xhr.setRequestHeader('Content-Type', 'application/json')
-    xhr.onload = () => console.log(xhr.status);
-    xhr.send(JSON.stringify({
-        "Id": 23425,
-        "code": code,
-    }));
-    console.log(xhr);
+    Code.sendHTTPRequest("POST", "http://192.9.249.213:3000", {
+        "Id": 1234,
+        "code": Blockly.JavaScript.workspaceToCode(Code.workspace),
+    })
 }
 
 Code.blockly = function() {
@@ -89,138 +93,7 @@ Code.blockly = function() {
     const blocklyArea = document.getElementById('blockly-container');
     const blocklyDiv = document.getElementById('blockly-div');
 
-    Code.Blockly.defineBlocksWithJsonArray([
-        {
-            "type": "conv2d",
-            "kind": "block",
-            "message0": "Conv2D %1 Activation %2",
-            "args0": [
-                {
-                    "type": "input_dummy"
-                },
-                {
-                    "type": "field_dropdown",
-                    "name": "activation",
-                    "options": [
-                        [ "relu", "RELU" ],
-                        [ "sigmoid", "SIGMOID" ],
-                        [ "softmax", "SOFTMAX" ],
-                        [ "softplus", "SOFTPLUS" ],
-                        [ "softsign", "SOFTSIGN" ],
-                        [ "tanh", "TANH" ],
-                        [ "selu", "SELU" ],
-                        [ "elu", "ELU" ],
-                        [ "exponential", "EXPONENTIAL" ],
-                    ]
-                }
-            ],
-            "previousStatement": null,
-            "nextStatement": 'Layer',
-            "inputsInline": true,
-            "colour": 230,
-            "tooltip": "tooltip1",
-            "helpUrl": ""
-        },
-        {
-            "type": "maxpooling2d",
-            "kind": "block",
-            "message0": "MaxPooling2D",
-            "previousStatement": null,
-            "nextStatement": null,
-            "inputsInline": true,
-            "colour": 230,
-            "tooltip": "tooltip2",
-            "helpUrl": ""
-        },
-        {
-            "type": "flatten",
-            "kind": "block",
-            "message0": "Flatten",
-            "previousStatement": null,
-            "nextStatement": null,
-            "inputsInline": true,
-            "colour": 230,
-            "tooltip": "tooltip2",
-            "helpUrl": ""
-        },
-        {
-            "type": "dropout",
-            "kind": "block",
-            "message0": "Dropout %1 Rate %2",
-            "args0": [
-                {
-                    "type": "input_dummy"
-                },
-                {
-                    "type": "field_slider",
-                    "name": "rate",
-                    "value": 0.2,
-                    "min": 0,
-                    "max": 1,
-                    "precision": 0.01
-                }
-            ],
-            "inputsInline": true,
-            "previousStatement": null,
-            "nextStatement": null,
-            "colour": 230,
-            "tooltip": "",
-            "helpUrl": ""
-        },
-        {
-            "type": "dense",
-            "kind": "block",
-            "message0": "Dense %1 Number of Neurons %2 Activation %3",
-            "args0": [
-                {
-                    "type": "input_dummy"
-                },
-                {
-                    "type": "field_number",
-                    "name": "num_neurons",
-                },
-                {
-                    "type": "field_dropdown",
-                    "name": "activation",
-                    "options": [
-                        [ "relu", "RELU" ],
-                        [ "sigmoid", "SIGMOID" ],
-                        [ "softmax", "SOFTMAX" ],
-                        [ "softplus", "SOFTPLUS" ],
-                        [ "softsign", "SOFTSIGN" ],
-                        [ "tanh", "TANH" ],
-                        [ "selu", "SELU" ],
-                        [ "elu", "ELU" ],
-                        [ "exponential", "EXPONENTIAL" ],
-                    ]
-                }
-            ],
-            "previousStatement": null,
-            "nextStatement": null,
-            "inputsInline": true,
-            "colour": 230,
-            "tooltip": "tooltip1",
-            "helpUrl": ""
-        },
-        {
-            "type": "cnn_model",
-            "kind": "block",
-            "message0": "Sequential Model %1 Layers: %2",
-            "args0": [
-                {
-                    "type": "input_dummy"
-                },
-                {
-                    "type": "input_statement",
-                    "name": "layers",
-                    "check": "Layer"
-                }
-            ],
-            "colour": 120,
-            "tooltip": "",
-            "helpUrl": ""
-        }
-    ]);
+    Code.Blockly.defineBlocksWithJsonArray(blocks);
 
     Blockly.JavaScript['conv2d'] = function(block) {
         var value_activation = Blockly.JavaScript.valueToCode(block, 'activation', Blockly.JavaScript.ORDER_ATOMIC);
