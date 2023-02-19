@@ -18,16 +18,55 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("run-confirm-yes").addEventListener("click", () => {
         Code.exp();
     });
-    document.getElementById("images-upload-yes").addEventListener("click", () => {
-        Code.uploadImages();
+    document.getElementById("images-upload-yes").addEventListener("click", async () => {
+        await Code.uploadImages(0);
     });
     document.getElementById("images-modal").addEventListener("shown.bs.modal", () => {
+        let loading = document.createElement("p");
+        loading.id = "loading";
+        loading.textContent = "Loading...";
+        document.getElementById("image-container").appendChild(loading);
         Code.loadImages();
     });
     document.getElementById("images-modal").addEventListener("hidden.bs.modal", () => {
         Code.unloadImages();
     });
+    document.getElementById("images-preview").addEventListener("shown.bs.modal", () => {
+        let loading = document.createElement("p");
+        loading.id = "loading-preview";
+        loading.textContent = "Loading...";
+        document.getElementById("image-preview-container").appendChild(loading);
+        Code.loadImagesPreview();
+    });
+    document.getElementById("images-preview").addEventListener("hidden.bs.modal", () => {
+        Code.unloadImagesPreview();
+    });
+    document.getElementById("images-preview-no").addEventListener("click", () => {
+        ipcRenderer.send('delete-temp');
+    });
+    document.getElementById("images-preview-yes").addEventListener("click", () => {
+        ipcRenderer.send('temp-to-image');
+        let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
+        imageModal.show();
+    });
     Code.blockly();
+});
+
+ipcRenderer.on('preview-modal', (event) => {
+    let previewModal = new bootstrap.Modal(document.getElementById('images-preview'), {});
+    let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
+    console.log("closing imageModal " + imageModal.toString())
+    previewModal.show();
+});
+
+ipcRenderer.on('call-preview-image', (event, imagePath) => {
+    const newDiv = document.createElement("div");
+    newDiv.classList.add('image-div');
+    const imgNode = document.createElement("img");
+    imgNode.src = imagePath;
+    imgNode.classList.add('image');
+    newDiv.appendChild(imgNode);
+    document.getElementById('image-preview-container').appendChild(newDiv);
 });
 
 ipcRenderer.on('call-display-image', (event, imagePath) => {
@@ -67,8 +106,24 @@ ipcRenderer.on('call-display-image', (event, imagePath) => {
     });
 });
 
+ipcRenderer.on('done-loading', (event) => {
+    document.getElementById("loading").style.visibility = 'hidden';
+});
+
+ipcRenderer.on('done-loading-preview', (event) => {
+    document.getElementById("loading-preview").style.visibility = 'hidden';
+});
+
 Code.unloadImages = function() {
     var imageContainer = document.getElementById('image-container').children;
+
+    while(imageContainer.length) {
+        imageContainer[0].remove();
+    }
+};
+
+Code.unloadImagesPreview = function() {
+    var imageContainer = document.getElementById('image-preview-container').children;
 
     while(imageContainer.length) {
         imageContainer[0].remove();
@@ -79,8 +134,12 @@ Code.loadImages = function() {
     ipcRenderer.send('load-images');
 }
 
-Code.uploadImages = function() {
-    ipcRenderer.send('image-upload');
+Code.loadImagesPreview = function() {
+    ipcRenderer.send('load-preview');
+}
+
+Code.uploadImages = async function(method) {
+    ipcRenderer.send('image-upload', [method]);
 }
 
 Code.setURL = function(url) {

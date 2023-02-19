@@ -5,6 +5,7 @@ const fs = require('fs');
 WIN_WIDTH = 1280;
 WIN_HEIGHT = 720;
 IMAGES_FOLDER = "images_folder";
+TEMP_FOLDER = "temp"
 let win;
 
 const createHomeWindow = () => {
@@ -63,6 +64,10 @@ ipcMain.on('go-to-home', e => {
     createHomeWindow();
 });
 
+deleteTemp = function () {
+    fs.rmSync(path.join(path.join(app.getPath('userData'), TEMP_FOLDER)), { recursive: true, force: true });
+}
+
 ipcMain.on('load-images', async (event) => {
     try {
         // Get the files as an array
@@ -81,6 +86,7 @@ ipcMain.on('load-images', async (event) => {
                 // require('electron').ipcRenderer.send('display-image', filePath);
             }
         }
+        event.sender.send('done-loading');
     }
     catch(err) {
         console.log(err);
@@ -88,10 +94,60 @@ ipcMain.on('load-images', async (event) => {
 
 });
 
+ipcMain.on('load-preview', async (event) => {
+    try {
+        // Get the files as an array
+        if (!fs.existsSync(path.join(app.getPath('userData'), TEMP_FOLDER))) {
+            fs.mkdirSync(path.join(app.getPath('userData'), TEMP_FOLDER));
+        }
+
+        const files = await fs.promises.readdir(path.join(app.getPath('userData'), TEMP_FOLDER));
+
+        for( const file of files ) {
+            const imagePath = path.join(path.join(app.getPath('userData'), TEMP_FOLDER), file);
+            const stat = await fs.promises.stat(imagePath);
+
+            if(stat.isFile()) {
+                event.sender.send('call-preview-image', imagePath);
+                // require('electron').ipcRenderer.send('display-image', filePath);
+            }
+        }
+    }
+    catch(err) {
+        console.log(err);
+    }
+
+});
+
+ipcMain.on('temp-to-image', async (event) => {
+    try {
+        const files = await fs.promises.readdir(path.join(app.getPath('userData'), TEMP_FOLDER));
+        for(const file of files) {
+            const imagePath = path.join(path.join(app.getPath('userData'), TEMP_FOLDER), file);
+            const uploadPath = path.join(path.join(app.getPath('userData'), IMAGES_FOLDER), file);
+            fs.copyFile(imagePath, uploadPath, (err) => {
+                if (err) throw err;
+                console.log(imagePath + ' uploaded to ' + uploadPath);
+            });
+        }
+        deleteTemp();
+    }
+    catch (err) {
+        console.log(err);
+    }
+})
+
+//upload to images folder from a directory
 ipcMain.on('image-upload', (event, arg) => {
     if (!fs.existsSync(path.join(app.getPath('userData'), IMAGES_FOLDER))) {
         fs.mkdirSync(path.join(app.getPath('userData'), IMAGES_FOLDER));
     }
+    if (!fs.existsSync(path.join(app.getPath('userData'), TEMP_FOLDER))) {
+        fs.mkdirSync(path.join(app.getPath('userData'), TEMP_FOLDER));
+    }
+
+    console.log('args[0]: ' + arg[0])
+
     // If the platform is 'darwin' (macOS)
     dialog.showOpenDialog({
         title: 'Select the File to be uploaded',
@@ -106,23 +162,32 @@ ipcMain.on('image-upload', (event, arg) => {
         // Selector Property In macOS
         properties: ['openFile', 'openDirectory']
     }).then(file => {
+        let uploadPath;
         if (!file.canceled) {
             const filePath = file.filePaths[0].toString('base64');
 
             const fileName = path.basename(filePath);
-            imgFolderPath = path.join(path.join(app.getPath('userData'), IMAGES_FOLDER), fileName);
+            //0 for temp, 1 for images folder
+            uploadPath = path.join(path.join(app.getPath('userData'), arg[0] === 0 ? TEMP_FOLDER : IMAGES_FOLDER), fileName);
 
             // copy file from original location to app data folder
-            fs.copyFile(filePath, imgFolderPath, (err) => {
+            fs.copyFile(filePath, uploadPath, (err) => {
                 if (err) throw err;
-                console.log(filePath + ' uploaded to ' + imgFolderPath);
-                event.sender.send('call-display-image', imgFolderPath);
+                console.log(filePath + ' uploaded to ' + uploadPath);
+                if (arg[0] === 0) {
+                    event.sender.send('preview-modal');
+                }
             });
         }
     }).catch(err => {
         console.log(err)
     });
 });
+
+ipcMain.on('delete-temp', (event) => {
+    deleteTemp();
+});
+
 
 // test
 //TODO: https://developers.google.com/blockly/guides/app-integration/attribution
