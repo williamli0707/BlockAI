@@ -66,3 +66,30 @@ body {
     flex-flow: row;
     align-items: center;
 }
+
+.image-div {
+    height: 100%;
+    width: 100%;
+    position: relative;
+    background-color: #ffffff;
+    flex: 0 1 auto;
+    display: flex;
+    flex-flow: row;
+    align-items: center;
+}
+
+.image {
+    height: 100%;
+    width: 100%;
+    background-color: #ffffff;
+    align-items: center;
+}
+
+.delete-button {
+    height: 75px;
+    width: 75px;
+    position: absolute;
+    top: 1%;
+    right: 1%;
+    visibility: hidden;
+}

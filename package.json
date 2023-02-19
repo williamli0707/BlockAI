@@ -19,7 +19,7 @@
     },
     {
       "name": "Alex Liu",
-      "email": "liuaslex54321@gmail.com"
+      "email": "liualex54321@gmail.com"
     }
   ],
   "license": "All rights reserved",
@@ -30,6 +30,7 @@
     "chokidar": "^3.5.3",
     "drag-drop": "^7.2.0",
     "electron-squirrel-startup": "^1.0.0",
+    "formidable": "^2.1.1",
     "fs-extra": "^11.1.0",
     "open": "^8.4.0"
   },

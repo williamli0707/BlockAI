@@ -2,7 +2,11 @@
  * namespace for code
  */
 var Code = {};
-Code.url = "http://www.blockai.great-site.net";
+const { app, ipcRenderer, systemPreferences } = require('electron');
+const fs = require('fs');
+const path = require("path");
+
+// Code.url = "http://www.blockai.great-site.net";
 
 window.addEventListener('DOMContentLoaded', () => {
     console.log("Chromium version " + process.versions['chrome'])
@@ -11,17 +15,72 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("back-button").addEventListener("click", () => {
         require('electron').ipcRenderer.send('go-to-home');
     });
-    document.getElementById("runConfirmYes").addEventListener("click", () => {
+    document.getElementById("run-confirm-yes").addEventListener("click", () => {
         Code.exp();
     });
-    document.getElementById("imagesUploadYes").addEventListener("click", () => {
+    document.getElementById("images-upload-yes").addEventListener("click", () => {
         Code.uploadImages();
-    }) 
+    });
+    document.getElementById("images-modal").addEventListener("shown.bs.modal", () => {
+        Code.loadImages();
+    });
+    document.getElementById("images-modal").addEventListener("hidden.bs.modal", () => {
+        Code.unloadImages();
+    });
     Code.blockly();
 });
 
+ipcRenderer.on('call-display-image', (event, imagePath) => {
+    const newDiv = document.createElement("div");
+    newDiv.classList.add('image-div');
+
+    const imgNode = document.createElement("img");
+    imgNode.src = imagePath;
+    imgNode.classList.add('image');
+
+    const deleteNode = document.createElement("button");
+    deleteNode.innerHTML = '<img src="./images/trashcan_icon.png" class="image"/>';
+    deleteNode.classList.add('delete-button');
+
+    imgNode.addEventListener("mouseover", () => {
+        deleteNode.style.visibility = 'visible';
+    });
+    imgNode.addEventListener("mouseout", () => {
+        deleteNode.style.visibility = 'hidden';
+    });
+
+    deleteNode.addEventListener("mouseover", () => {
+        deleteNode.style.visibility = 'visible';
+    });
+    deleteNode.addEventListener("mouseout", () => {
+        deleteNode.style.visibility = 'hidden';
+    });
+
+    newDiv.appendChild(imgNode);
+    newDiv.appendChild(deleteNode);
+    document.getElementById('image-container').appendChild(newDiv);
+
+    deleteNode.addEventListener("click", () => {
+        newDiv.remove();
+        fs.unlinkSync(imagePath);
+        console.log("removing " + imagePath);
+    });
+});
+
+Code.unloadImages = function() {
+    var imageContainer = document.getElementById('image-container').children;
+
+    while(imageContainer.length) {
+        imageContainer[0].remove();
+    }
+}
+
+Code.loadImages = function() {
+    ipcRenderer.send('load-images');
+}
+
 Code.uploadImages = function() {
-    
+    ipcRenderer.send('image-upload');
 }
 
 Code.setURL = function(url) {
@@ -40,7 +99,7 @@ Code.updateProgress = function(ev) {
     else {
       // Unable to compute progress information since the total size is unknown
     }
-  }
+}
   
 Code.transferComplete = function(ev) {
     console.log("The transfer is complete.");
@@ -54,163 +113,47 @@ Code.transferCanceled = function(ev) {
     console.log("The transfer has been canceled by the user.");
 }
 
+Code.sendHTTPRequest = function(method, url, data) {
+    const promise = new Promise((resolve, reject) => {
+        const xhr = new window.XMLHttpRequest();
+        xhr.open(method, url, true);
+
+        xhr.responseType = 'json';
+
+        if(data) {
+            xhr.setRequestHeader('Content-Type', 'application/json')
+        }
+
+        xhr.onload = () => {
+            console.log(xhr.status);
+            resolve(xhr.response);
+        }
+
+        xhr.onerror = () => {
+            reject("error - something went wrong");
+        }
+
+        xhr.send(JSON.stringify(data));
+    });
+    return promise;
+}
+
 Code.exp = function(){    // export stuff to server
-    let fs = require('fs');
-    var code = Blockly.JavaScript.workspaceToCode(Code.workspace);  // user's code translated to javascript
-    console.log(code);
-    Code.xhr = new XMLHttpRequest();
-
-    Code.xhr.addEventListener("progress", Code.updateProgress);
-    Code.xhr.addEventListener("load", Code.transferComplete);
-    Code.xhr.addEventListener("error", Code.transferFailed);
-    Code.xhr.addEventListener("abort", Code.transferCanceled);
-
-    /**
-     * TODO: setup url to export to
-     */
-    Code.setURL(Code.url);
-    Code.xhr.send(code);
+    Code.sendHTTPRequest("POST", "http://192.9.249.213:3000", {
+        "Id": 1234,
+        "code": Blockly.JavaScript.workspaceToCode(Code.workspace),
+    })
 }
 
 Code.blockly = function() {
     Code.Blockly = require('blockly');
     Code.javascriptGenerator = require('blockly/javascript');
+    Code.path = require("path");
     require('@blockly/field-slider');
     const blocklyArea = document.getElementById('blockly-container');
     const blocklyDiv = document.getElementById('blockly-div');
 
-    Code.Blockly.defineBlocksWithJsonArray([
-        {
-            "type": "conv2d",
-            "kind": "block",
-            "message0": "Conv2D %1 Activation %2",
-            "args0": [
-                {
-                    "type": "input_dummy"
-                },
-                {
-                    "type": "field_dropdown",
-                    "name": "activation",
-                    "options": [
-                        [ "relu", "RELU" ],
-                        [ "sigmoid", "SIGMOID" ],
-                        [ "softmax", "SOFTMAX" ],
-                        [ "softplus", "SOFTPLUS" ],
-                        [ "softsign", "SOFTSIGN" ],
-                        [ "tanh", "TANH" ],
-                        [ "selu", "SELU" ],
-                        [ "elu", "ELU" ],
-                        [ "exponential", "EXPONENTIAL" ],
-                    ]
-                }
-            ],
-            "previousStatement": null,
-            "nextStatement": 'Layer',
-            "inputsInline": true,
-            "colour": 230,
-            "tooltip": "tooltip1",
-            "helpUrl": ""
-        },
-        {
-            "type": "maxpooling2d",
-            "kind": "block",
-            "message0": "MaxPooling2D",
-            "previousStatement": null,
-            "nextStatement": null,
-            "inputsInline": true,
-            "colour": 230,
-            "tooltip": "tooltip2",
-            "helpUrl": ""
-        },
-        {
-            "type": "flatten",
-            "kind": "block",
-            "message0": "Flatten",
-            "previousStatement": null,
-            "nextStatement": null,
-            "inputsInline": true,
-            "colour": 230,
-            "tooltip": "tooltip2",
-            "helpUrl": ""
-        },
-        {
-            "type": "dropout",
-            "kind": "block",
-            "message0": "Dropout %1 Rate %2",
-            "args0": [
-                {
-                    "type": "input_dummy"
-                },
-                {
-                    "type": "field_slider",
-                    "name": "rate",
-                    "value": 0.2,
-                    "min": 0,
-                    "max": 1,
-                    "precision": 0.01
-                }
-            ],
-            "inputsInline": true,
-            "previousStatement": null,
-            "nextStatement": null,
-            "colour": 230,
-            "tooltip": "",
-            "helpUrl": ""
-        },
-        {
-            "type": "dense",
-            "kind": "block",
-            "message0": "Dense %1 Number of Neurons %2 Activation %3",
-            "args0": [
-                {
-                    "type": "input_dummy"
-                },
-                {
-                    "type": "field_number",
-                    "name": "num_neurons",
-                },
-                {
-                    "type": "field_dropdown",
-                    "name": "activation",
-                    "options": [
-                        [ "relu", "RELU" ],
-                        [ "sigmoid", "SIGMOID" ],
-                        [ "softmax", "SOFTMAX" ],
-                        [ "softplus", "SOFTPLUS" ],
-                        [ "softsign", "SOFTSIGN" ],
-                        [ "tanh", "TANH" ],
-                        [ "selu", "SELU" ],
-                        [ "elu", "ELU" ],
-                        [ "exponential", "EXPONENTIAL" ],
-                    ]
-                }
-            ],
-            "previousStatement": null,
-            "nextStatement": null,
-            "inputsInline": true,
-            "colour": 230,
-            "tooltip": "tooltip1",
-            "helpUrl": ""
-        },
-        {
-            "type": "cnn_model",
-            "kind": "block",
-            "message0": "Sequential Model %1 Layers: %2",
-            "args0": [
-                {
-                    "type": "input_dummy"
-                },
-                {
-                    "type": "input_statement",
-                    "name": "layers",
-                    "check": "Layer"
-                }
-            ],
-            "colour": 120,
-            "tooltip": "",
-            "helpUrl": ""
-        }
-    ]);
+    Code.Blockly.defineBlocksWithJsonArray(blocks);
 
     Blockly.JavaScript['conv2d'] = function(block) {
         var value_activation = Blockly.JavaScript.valueToCode(block, 'activation', Blockly.JavaScript.ORDER_ATOMIC);
@@ -267,6 +210,6 @@ Code.blockly = function() {
         blocklyDiv.style.height = blocklyArea.offsetHeight + 'px';
         Code.Blockly.svgResize(Code.workspace);
     };
-    window.addEventListener('resize', onresize, false);
+    window.addEventListener('resize', Code.onresize, false);
     Code.onresize();
 }
