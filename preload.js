@@ -2,7 +2,11 @@
  * namespace for code
  */
 var Code = {};
-Code.url = "http://www.blockai.great-site.net";
+const { app, ipcRenderer, systemPreferences } = require('electron');
+const fs = require('fs');
+const path = require("path");
+
+// Code.url = "http://www.blockai.great-site.net";
 
 window.addEventListener('DOMContentLoaded', () => {
     console.log("Chromium version " + process.versions['chrome'])
@@ -11,17 +15,72 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("back-button").addEventListener("click", () => {
         require('electron').ipcRenderer.send('go-to-home');
     });
-    document.getElementById("runConfirmYes").addEventListener("click", () => {
+    document.getElementById("run-confirm-yes").addEventListener("click", () => {
         Code.exp();
     });
-    document.getElementById("imagesUploadYes").addEventListener("click", () => {
+    document.getElementById("images-upload-yes").addEventListener("click", () => {
         Code.uploadImages();
-    }) 
+    });
+    document.getElementById("images-modal").addEventListener("shown.bs.modal", () => {
+        Code.loadImages();
+    });
+    document.getElementById("images-modal").addEventListener("hidden.bs.modal", () => {
+        Code.unloadImages();
+    });
     Code.blockly();
 });
 
-Code.uploadImages = function() {
+ipcRenderer.on('call-display-image', (event, imagePath) => {
+    const newDiv = document.createElement("div");
+    newDiv.classList.add('image-div');
 
+    const imgNode = document.createElement("img");
+    imgNode.src = imagePath;
+    imgNode.classList.add('image');
+
+    const deleteNode = document.createElement("button");
+    deleteNode.innerHTML = '<img src="./images/trashcan_icon.png" class="image"/>';
+    deleteNode.classList.add('delete-button');
+
+    imgNode.addEventListener("mouseover", () => {
+        deleteNode.style.visibility = 'visible';
+    });
+    imgNode.addEventListener("mouseout", () => {
+        deleteNode.style.visibility = 'hidden';
+    });
+
+    deleteNode.addEventListener("mouseover", () => {
+        deleteNode.style.visibility = 'visible';
+    });
+    deleteNode.addEventListener("mouseout", () => {
+        deleteNode.style.visibility = 'hidden';
+    });
+
+    newDiv.appendChild(imgNode);
+    newDiv.appendChild(deleteNode);
+    document.getElementById('image-container').appendChild(newDiv);
+
+    deleteNode.addEventListener("click", () => {
+        newDiv.remove();
+        fs.unlinkSync(imagePath);
+        console.log("removing " + imagePath);
+    });
+});
+
+Code.unloadImages = function() {
+    var imageContainer = document.getElementById('image-container').children;
+
+    while(imageContainer.length) {
+        imageContainer[0].remove();
+    }
+}
+
+Code.loadImages = function() {
+    ipcRenderer.send('load-images');
+}
+
+Code.uploadImages = function() {
+    ipcRenderer.send('image-upload');
 }
 
 Code.setURL = function(url) {
@@ -40,7 +99,7 @@ Code.updateProgress = function(ev) {
     else {
       // Unable to compute progress information since the total size is unknown
     }
-  }
+}
   
 Code.transferComplete = function(ev) {
     console.log("The transfer is complete.");
@@ -89,6 +148,7 @@ Code.exp = function(){    // export stuff to server
 Code.blockly = function() {
     Code.Blockly = require('blockly');
     Code.javascriptGenerator = require('blockly/javascript');
+    Code.path = require("path");
     require('@blockly/field-slider');
     const blocklyArea = document.getElementById('blockly-container');
     const blocklyDiv = document.getElementById('blockly-div');
