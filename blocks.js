@@ -236,12 +236,19 @@ const blocks = [
                 "check": "Layer"
             }
         ],
+        "previousStatement": null,
+        "nextStatement": null,
         "colour": 120,
         "tooltip": "",
         "helpUrl": ""
     },
     {
-        "type": "imagenet"
-
+        "type": "mobilenet",
+        "message0": "Pretrained #1 (Mobilenet v3)",
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 120,
+        "tooltip": "",
+        "helpUrl": ""
     }
 ]

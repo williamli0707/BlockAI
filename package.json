@@ -19,12 +19,13 @@
     },
     {
       "name": "Alex Liu",
-      "email": "liualex54321@gmail.com"
+      "email": "alex@alex.com"
     }
   ],
   "license": "All rights reserved",
   "dependencies": {
     "@blockly/field-slider": "^4.0.4",
+    "@tensorflow/tfjs": "^4.2.0",
     "blockly": "^9.2.0",
     "bootstrap": "^5.3.0-alpha1",
     "chokidar": "^3.5.3",

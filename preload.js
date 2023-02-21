@@ -6,6 +6,8 @@ const { app, ipcRenderer, systemPreferences } = require('electron');
 const fs = require('fs');
 const path = require("path");
 
+let classNum;
+
 // Code.url = "http://www.blockai.great-site.net";
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -18,24 +20,105 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("run-confirm-yes").addEventListener("click", () => {
         Code.exp();
     });
-    document.getElementById("images-upload-yes").addEventListener("click", () => {
-        Code.uploadImages();
+    document.getElementById("images-upload-yes").addEventListener("click", async () => {
+        await Code.uploadImages(0);
     });
     document.getElementById("images-modal").addEventListener("shown.bs.modal", () => {
+        let loading = document.createElement("p");
+        loading.id = "loading";
+        loading.textContent = "Loading...";
+        document.getElementById("image-container").appendChild(loading);
         Code.loadImages();
     });
     document.getElementById("images-modal").addEventListener("hidden.bs.modal", () => {
         Code.unloadImages();
     });
+    document.getElementById("images-preview").addEventListener("shown.bs.modal", () => {
+        let loading = document.createElement("p");
+        loading.id = "loading-preview";
+        loading.textContent = "Loading...";
+        document.getElementById("image-preview-container").appendChild(loading);
+        Code.loadImagesPreview();
+    });
+    document.getElementById("images-preview").addEventListener("hidden.bs.modal", () => {
+        Code.unloadImagesPreview();
+    });
+    document.getElementById("images-preview-no").addEventListener("click", () => {
+        ipcRenderer.send('delete-temp');
+    });
+    // document.getElementById("images-preview-yes").addEventListener("click", () => {
+    //     ipcRenderer.send('temp-to-image', ["1"]);
+    //     let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
+    //     imageModal.show();
+    // });
+    document.getElementById("upload1").addEventListener("click", () => {
+        ipcRenderer.send('temp-to-image', ["1"]);
+        let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
+        imageModal.show();
+    });
+    document.getElementById("upload2").addEventListener("click", () => {
+        ipcRenderer.send('temp-to-image', ["2"]);
+        let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
+        imageModal.show();
+    });
+    //TODO multiple classes
     Code.blockly();
 });
 
-ipcRenderer.on('call-display-image', (event, imagePath) => {
+ipcRenderer.on('preview-modal', (event) => {
+    let previewModal = new bootstrap.Modal(document.getElementById('images-preview'), {});
+    let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
+    console.log("closing imageModal " + imageModal.toString())
+    previewModal.show();
+});
+
+ipcRenderer.on('call-preview-image', (event, imagePath) => {
+    const newDiv = document.createElement("div");
+    newDiv.classList.add('image-div');
+    const imgNode = document.createElement("img");
+    imgNode.src = imagePath;
+    imgNode.classList.add('image');
+    newDiv.appendChild(imgNode);
+    document.getElementById('image-preview-container').appendChild(newDiv);
+});
+
+ipcRenderer.on('accordion-add', (event, args) => {
+     let accordionItem = document.createElement("div");
+     let heading = document.createElement("h2");
+     let button = document.createElement("button");
+     let collapse = document.createElement("div");
+     let accbody = document.createElement("div");
+     accordionItem.classList.add('accordion-item');
+     heading.classList.add('accordion-header');
+     button.classList.add('accordion-button');
+     button.type = 'button';
+     button.setAttribute("data-bs-toggle", "collapse");
+     button.setAttribute("data-bs-target", "#collapse" + args)
+     button.ariaExpanded = "true";
+     button.setAttribute("aria-controls", "collapse" + args);
+     collapse.setAttribute("aria-labelledby", "heading" + args);
+     collapse.setAttribute("data-bs-parent", "#images-accordion");
+     collapse.classList.add('accordion-collapse');
+     collapse.classList.add('collapse');
+     collapse.classList.add('show');
+     heading.id = "heading" + args;
+     button.id = "button" + args;
+     button.textContent = "Class " + args;
+     collapse.id = "collapse" + args;
+     accbody.id = "accordion-body" + args;
+     heading.appendChild(button);
+     collapse.appendChild(accbody);
+     accordionItem.appendChild(heading);
+     accordionItem.appendChild(collapse);
+     document.getElementById('images-accordion').appendChild(accordionItem);
+});
+
+ipcRenderer.on('call-display-image', (event, args) => {
     const newDiv = document.createElement("div");
     newDiv.classList.add('image-div');
 
     const imgNode = document.createElement("img");
-    imgNode.src = imagePath;
+    imgNode.src = args[0];
     imgNode.classList.add('image');
 
     const deleteNode = document.createElement("button");
@@ -58,14 +141,26 @@ ipcRenderer.on('call-display-image', (event, imagePath) => {
 
     newDiv.appendChild(imgNode);
     newDiv.appendChild(deleteNode);
-    document.getElementById('image-container').appendChild(newDiv);
+    document.getElementById(('accordion-body' + args[1].toString())).appendChild(newDiv);
 
     deleteNode.addEventListener("click", () => {
         newDiv.remove();
-        fs.unlinkSync(imagePath);
-        console.log("removing " + imagePath);
+        fs.unlinkSync(args[0]);
+        console.log("removing " + args[0]);
     });
 });
+
+ipcRenderer.on('done-loading', (event) => {
+    document.getElementById("loading").remove();
+});
+
+ipcRenderer.on('done-loading-preview', (event) => {
+    document.getElementById("loading-preview").remove();
+});
+
+ipcRenderer.on('num-classes', (event, args) => {
+    classNum = args;
+})
 
 Code.unloadImages = function() {
     var imageContainer = document.getElementById('image-container').children;
@@ -73,14 +168,33 @@ Code.unloadImages = function() {
     while(imageContainer.length) {
         imageContainer[0].remove();
     }
+};
+
+Code.unloadImagesPreview = function() {
+    var imageContainer = document.getElementById('image-preview-container').children;
+
+    while(imageContainer.length) {
+        imageContainer[0].remove();
+    }
 }
 
 Code.loadImages = function() {
+    ipcRenderer.send('ensure-folder');
+    let accordion = document.createElement("div");
+    accordion.classList.add('accordion');
+    accordion.id = 'images-accordion';
+
+    document.getElementById("image-container").appendChild(accordion);
+
     ipcRenderer.send('load-images');
 }
 
-Code.uploadImages = function() {
-    ipcRenderer.send('image-upload');
+Code.loadImagesPreview = function() {
+    ipcRenderer.send('load-preview');
+}
+
+Code.uploadImages = async function(method) {
+    ipcRenderer.send('image-upload', [method]);
 }
 
 Code.setURL = function(url) {
