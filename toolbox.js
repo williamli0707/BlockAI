@@ -36,6 +36,10 @@ const toolbox = {
                 {
                     "type": "cnn_model",
                     "kind": "block",
+                },
+                {
+                    "type": "mobilenet",
+                    "kind": "block",
                 }
             ]
         },
@@ -62,10 +66,6 @@ const toolbox = {
                 {
                     "type": "dense",
                     "kind": "block",
-                },
-                {
-                    "kind": "block",
-                    "type": "controls_if"
                 }
             ]
         }
