@@ -3,6 +3,7 @@
   <component name="ProjectModuleManager">
     <modules>
       <module fileurl="file://$PROJECT_DIR$/.idea/BlockAI.iml" filepath="$PROJECT_DIR$/.idea/BlockAI.iml" />
+      <module fileurl="file://$USER_HOME$/WebstormProjects/mobilenettest/.idea/mobilenettest.iml" filepath="$USER_HOME$/WebstormProjects/mobilenettest/.idea/mobilenettest.iml" />
     </modules>
   </component>
 </project>

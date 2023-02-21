@@ -7,6 +7,7 @@ WIN_HEIGHT = 720;
 IMAGES_FOLDER = "images_folder";
 TEMP_FOLDER = "temp"
 let win;
+NUM_CLASSES = 2;
 
 const createHomeWindow = () => {
     win = new BrowserWindow({
@@ -68,24 +69,35 @@ deleteTemp = function () {
     fs.rmSync(path.join(path.join(app.getPath('userData'), TEMP_FOLDER)), { recursive: true, force: true });
 }
 
+ipcMain.on('ensure-folder', (event) => {
+    let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
+    if (!fs.existsSync(imagesFolder)) {
+        fs.mkdirSync(imagesFolder);
+        fs.mkdirSync(path.join(imagesFolder, "1"));
+        fs.mkdirSync(path.join(imagesFolder, "2"));
+    }
+    event.sender.send('num-classes', NUM_CLASSES);//TODO: once >2 classes are available
+});
+
 ipcMain.on('load-images', async (event) => {
     try {
         // Get the files as an array
-        if (!fs.existsSync(path.join(app.getPath('userData'), IMAGES_FOLDER))) {
-            fs.mkdirSync(path.join(app.getPath('userData'), IMAGES_FOLDER));
-        }
+        let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
 
-        const files = await fs.promises.readdir(path.join(app.getPath('userData'), IMAGES_FOLDER));
+        for(let i = 1;i <= NUM_CLASSES;i++) {
+            event.sender.send('accordion-add', i);
+            const files = await fs.promises.readdir(path.join(imagesFolder, i.toString()));
+            for( const file of files ) {
+                const imagePath = path.join(imagesFolder, i.toString(), file);
+                const stat = await fs.promises.stat(imagePath);
 
-        for( const file of files ) {
-            const imagePath = path.join(path.join(app.getPath('userData'), IMAGES_FOLDER), file);
-            const stat = await fs.promises.stat(imagePath);
-
-            if(stat.isFile()) {
-                event.sender.send('call-display-image', imagePath);
-                // require('electron').ipcRenderer.send('display-image', filePath);
+                if(stat.isFile()) {
+                    event.sender.send('call-display-image', [imagePath, i]);
+                    // require('electron').ipcRenderer.send('display-image', filePath);
+                }
             }
         }
+
         event.sender.send('done-loading');
     }
     catch(err) {
@@ -112,6 +124,8 @@ ipcMain.on('load-preview', async (event) => {
                 // require('electron').ipcRenderer.send('display-image', filePath);
             }
         }
+
+        event.sender.send('done-loading-preview');
     }
     catch(err) {
         console.log(err);
@@ -119,12 +133,13 @@ ipcMain.on('load-preview', async (event) => {
 
 });
 
-ipcMain.on('temp-to-image', async (event) => {
+//once confirmed, images should be moved to main images folder and temp folder should be deleted
+ipcMain.on('temp-to-image', async (event, args) => {
     try {
         const files = await fs.promises.readdir(path.join(app.getPath('userData'), TEMP_FOLDER));
         for(const file of files) {
-            const imagePath = path.join(path.join(app.getPath('userData'), TEMP_FOLDER), file);
-            const uploadPath = path.join(path.join(app.getPath('userData'), IMAGES_FOLDER), file);
+            const imagePath = path.join(app.getPath('userData'), TEMP_FOLDER, file);
+            const uploadPath = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString(), file);
             fs.copyFile(imagePath, uploadPath, (err) => {
                 if (err) throw err;
                 console.log(imagePath + ' uploaded to ' + uploadPath);
@@ -139,11 +154,15 @@ ipcMain.on('temp-to-image', async (event) => {
 
 //upload to images folder from a directory
 ipcMain.on('image-upload', (event, arg) => {
-    if (!fs.existsSync(path.join(app.getPath('userData'), IMAGES_FOLDER))) {
-        fs.mkdirSync(path.join(app.getPath('userData'), IMAGES_FOLDER));
+    let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
+    let tempFolder = path.join(app.getPath('userData'), TEMP_FOLDER)
+    if (!fs.existsSync(imagesFolder)) {
+        fs.mkdirSync(imagesFolder);
+        fs.mkdirSync(path.join(imagesFolder, "1"));
+        fs.mkdirSync(path.join(imagesFolder, "2"));
     }
-    if (!fs.existsSync(path.join(app.getPath('userData'), TEMP_FOLDER))) {
-        fs.mkdirSync(path.join(app.getPath('userData'), TEMP_FOLDER));
+    if (!fs.existsSync(tempFolder)) {
+        fs.mkdirSync(tempFolder);
     }
 
     console.log('args[0]: ' + arg[0])
@@ -156,7 +175,7 @@ ipcMain.on('image-upload', (event, arg) => {
         filters: [
         {
         name: 'Text Files',
-        extensions: ['png', 'jpeg']
+        extensions: ['png', 'jpeg', 'jpg']
         }, ],
         // Specifying the File Selector and Directory
         // Selector Property In macOS
