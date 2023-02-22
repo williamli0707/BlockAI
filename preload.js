@@ -1,28 +1,67 @@
 /**
  * namespace for code
  */
-var Code = {};
+let Code = {};
+//state is 0 when in workspace, 1 when in training state
+let state = 0;
 const { app, ipcRenderer, systemPreferences } = require('electron');
 const fs = require('fs');
 const path = require("path");
-
-let classNum;
+let classNum, $, carousel, status;
+let tfLoaded = false;
+const mobilenet_url = "https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_small_100_224/feature_vector/5/default/1";
 
 // Code.url = "http://www.blockai.great-site.net";
 
+//TODO: building
+/*
+1. load tfjs
+2. load mobilenet
+3.
+
+Later:
+change to actual js loaded not placeholder
+image carousel cycle
+progress bar
+*/
+
 window.addEventListener('DOMContentLoaded', () => {
+    $ = require('jquery');
+    carousel = new bootstrap.Carousel('#carousel');
+    status = document.getElementById("status");
     console.log("Chromium version " + process.versions['chrome'])
     console.log("Node.js version " + process.versions['node'])
     console.log("Electron version " + process.versions['electron'])
     document.getElementById("back-button").addEventListener("click", () => {
-        require('electron').ipcRenderer.send('go-to-home');
+        Code.back();
     });
+
     document.getElementById("run-confirm-yes").addEventListener("click", () => {
-        Code.exp();
+        carousel.next();
+        state = 1;
+        if(!tfLoaded) {
+            let tfscript = document.createElement("script");
+            tfscript.onload = function() {
+                tfLoaded = true;
+                status.innerText = "Loaded TF script";
+                Code.loadTensorflow();
+            }
+            console.log("loading tf script");
+            tfscript.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js";
+            document.getElementById("build-content").appendChild(tfscript);
+        }
+
+        console.log("tf script loaded? " + tfLoaded);
+        document.getElementById('run-button').classList.add('d-none');
+        document.getElementById('images-button').classList.add('d-none');
+
+        // Code.exp();
     });
+
     document.getElementById("images-upload-yes").addEventListener("click", async () => {
         await Code.uploadImages(0);
     });
+
     document.getElementById("images-modal").addEventListener("shown.bs.modal", () => {
         let loading = document.createElement("p");
         loading.id = "loading";
@@ -30,9 +69,11 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById("image-container").appendChild(loading);
         Code.loadImages();
     });
+
     document.getElementById("images-modal").addEventListener("hidden.bs.modal", () => {
         Code.unloadImages();
     });
+
     document.getElementById("images-preview").addEventListener("shown.bs.modal", () => {
         let loading = document.createElement("p");
         loading.id = "loading-preview";
@@ -40,22 +81,21 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById("image-preview-container").appendChild(loading);
         Code.loadImagesPreview();
     });
+
     document.getElementById("images-preview").addEventListener("hidden.bs.modal", () => {
         Code.unloadImagesPreview();
     });
+
     document.getElementById("images-preview-no").addEventListener("click", () => {
         ipcRenderer.send('delete-temp');
     });
-    // document.getElementById("images-preview-yes").addEventListener("click", () => {
-    //     ipcRenderer.send('temp-to-image', ["1"]);
-    //     let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
-    //     imageModal.show();
-    // });
+
     document.getElementById("upload1").addEventListener("click", () => {
         ipcRenderer.send('temp-to-image', ["1"]);
         let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
         imageModal.show();
     });
+
     document.getElementById("upload2").addEventListener("click", () => {
         ipcRenderer.send('temp-to-image', ["2"]);
         let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
@@ -161,6 +201,28 @@ ipcRenderer.on('done-loading-preview', (event) => {
 ipcRenderer.on('num-classes', (event, args) => {
     classNum = args;
 })
+
+Code.loadTensorflow = async function() {
+    let mobilenet = await tf.loadGraphModel(mobilenet_url, {fromTFHub: true});
+    status.innerText += "\n Loaded Mobilenet v3"
+    //warm up the model (??) by passing it through zeros
+    tf.tidy(function () {
+        let answer = mobilenet.predict(tf.zeros([1, MOBILE_NET_INPUT_HEIGHT, MOBILE_NET_INPUT_WIDTH, 3]));
+        console.log(answer.shape);
+    });
+}
+
+Code.back = function() {
+    if(!state) {
+        require('electron').ipcRenderer.send('go-to-home');
+    }
+    else {
+        carousel.prev();
+        state = 0;
+        document.getElementById('run-button').classList.remove('d-none');
+        document.getElementById('images-button').classList.remove('d-none');
+    }
+}
 
 Code.unloadImages = function() {
     var imageContainer = document.getElementById('image-container').children;
@@ -312,14 +374,12 @@ Code.blockly = function() {
         // Compute the absolute coordinates and dimensions of blocklyArea.
         let element = blocklyArea;
         let x = 0;
-        let y = 0;
         do {
             x += element.offsetLeft;
-            y += element.offsetTop;
             element = element.offsetParent;
         } while (element);
         blocklyDiv.style.left = x + 'px';
-        blocklyDiv.style.top = y + 'px';
+        blocklyDiv.style.top = '0px';
         blocklyDiv.style.width = blocklyArea.offsetWidth + 'px';
         blocklyDiv.style.height = blocklyArea.offsetHeight + 'px';
         Code.Blockly.svgResize(Code.workspace);
