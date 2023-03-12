@@ -17,9 +17,11 @@
     <script defer src="./blocks.js"></script>
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <link rel="stylesheet" href="styles.css">
-    <title>Hello World!</title>
+    <title>Project Editor</title>
 </head>
 <body>
+    <script type="module" src="camera.js"></script>
+    <script type="module" src="camera-predict.js"></script>
     <div id="content-full">
         <div id="menu" class="menu">
             <div id="back">
@@ -32,7 +34,7 @@
                 <button type="button" id="run-button" class="menu-button btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#run-confirm-modal">Run</button>
             </div>
         </div>
-        <div id="carousel" class="carousel slide" data-ride="carousel">
+        <div id="carousel" class="carousel slide">
             <div class="carousel-inner" id="carousel-inner1">
                 <div class="carousel-item active" id="carousel-item1">
                     <div id="content">
@@ -53,7 +55,70 @@
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" id="images-upload-no" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-                                        <button type="button" id="images-upload-yes" class="btn btn-primary" data-bs-dismiss="modal">Upload</button>
+                                        <div class="btn-group">
+                                            <button type="button" class="btn btn-primary dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false">Upload</button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <button type="button" id="images-webcam-yes" class="dropdown-item" data-bs-dismiss="modal" data-bs-toggle="modal" data-bs-target="#webcam-preview">Upload from your webcam</button>
+                                                </li>
+                                                <li>
+                                                    <button type="button" id="images-upload-yes" class="dropdown-item" data-bs-dismiss="modal">Upload from your files</button>
+                                                </li>
+                                            </ul>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="modal fade" id="webcam-preview" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable modal-l">
+                                <div class="modal-content">
+                                    <div class="modal-header hstack gap-3">
+                                        <div id="webcam-back" class="d-none gap-3 d-flex">
+                                            <button type="button" class="btn btn-secondary" id="webcam-confirm-back">&#8249; Back</button>
+                                            <div class="vr"></div>
+                                        </div>
+
+                                        <h5 class="modal-title" id="images-webcam-label">Images - My Dataset 1</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body" id="image-webcam-container" class="image-container">
+<!--                                        <div id="webcam-carousel" class="carousel slide">-->
+<!--                                            <div class="carousel-inner">-->
+<!--                                                <div class="carousel-item active" id="webcam-carousel-video">-->
+                                                    <video id="webcam" class="webcam" autoplay muted></video>
+                                                    <div id="webcam-ui-buttons" class="hstack gap-2">
+                                                        <button class="btn btn-primary webcam-ui-button" id="enable-cam">Enable Webcam</button>
+                                                        <button type="button" class="btn btn-primary webcam-ui-button disabled" id="capture-webcam">Capture images</button>
+                                                    </div>
+<!--                                                </div>-->
+<!--                                                <div class="carousel-item" id="images-preview-webcam">-->
+
+<!--                                                </div>-->
+<!--                                            </div>-->
+<!--                                        </div>-->
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" id="images-webcam-no" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                        <button type="button" id="images-webcam-next" class="btn btn-primary" data-bs-dismiss="modal">Next</button>
+                                        <!--                        <button type="button" id="images-preview-yes" class="btn btn-success" data-bs-dismiss="modal">Confirm</button>-->
+                                        <div class="btn-group">
+                                            <button id="webcam-upload-confirm" type="button" class="btn btn-success dropdown-toggle d-none" data-bs-toggle="dropdown" aria-expanded="false"> Confirm </button>
+                                            <ul class="dropdown-menu">
+                                                <li>
+                                                    <button id="upload1-webcam" class="dropdown-item" data-bs-dismiss="modal">
+                                                        Upload to Class 1
+                                                    </button>
+                                                </li>
+                                                <li>
+                                                    <button id="upload2-webcam" class="dropdown-item" data-bs-dismiss="modal">
+                                                        Upload to Class 2
+                                                    </button>
+                                                </li>
+                                            </ul>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -67,7 +132,10 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body" id="image-preview-container" class="image-container">
+                                        <!-- -->
+                                        <ul class="image-list" id="image-list-preview">
 
+                                        </ul>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" id="images-preview-no" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
@@ -113,22 +181,31 @@
                     </div>
 
                 </div>
-                <div class="carousel-item">
+                <div id="build-carousel" class="carousel-item">
                     <div id="build-content">
-                        Building your code!
-                        <p id="status">Starting up...</p>
+                        <div id="card-train" class="card border-success border-3 overflow-auto build-card">
+                            <div class="card-header">
+                                Model Training
+                            </div>
+                            <div id="status" class="card-body overflow-auto">
+
+                            </div>
+                        </div>
+                        <div id="card-predict" class="card border-3 build-card">
+                            <div class="card-header">
+                                Predict from webcam
+                            </div>
+                            <div class="card-body" id="predict-body">
+                                <video id="webcam-predict" autoplay muted class="webcam" playing="false"></video>
+                                <button class="btn btn-primary webcam-ui-button disabled" id="enable-cam-predict">Enable Webcam</button>
+                                <p id="prediction">Enable your webcam to start predicting. </p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-
-
-
-
-    <script>
-        require('./preload.js');
-    </script>
 <!--    <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.js" crossorigin="anonymous"></script>-->
 </body>
 </html>
