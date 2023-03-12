@@ -1,16 +1,17 @@
-const { CodeGenerator } = require('blockly');
-const { app, BrowserWindow, ipcMain, dialog, ipcRenderer } = require('electron')
+const { app, BrowserWindow, ipcMain, dialog, ipcRenderer} = require('electron')
 const path = require('path');
 const fs = require('fs');
 WIN_WIDTH = 1280;
 WIN_HEIGHT = 720;
 IMAGES_FOLDER = "images_folder";
-TEMP_FOLDER = "temp"
+TEMP_FOLDER = "temp_folder"
 let win;
 NUM_CLASSES = 2;
+let extensionList = ["png", "jpg", "jpeg"];
 
 const createHomeWindow = () => {
     win = new BrowserWindow({
+        title: "Home",
         width: WIN_WIDTH,
         height: WIN_HEIGHT,
         webPreferences: {
@@ -46,6 +47,7 @@ ipcMain.on('go-to-creator', e => {
 ipcMain.on('go-to-editor', e => {
     win.close();
     win = new BrowserWindow({
+        title: "Project Editor",
         width: WIN_WIDTH,
         height: WIN_HEIGHT,
         webPreferences:{
@@ -76,6 +78,7 @@ ipcMain.on('ensure-folder', (event) => {
         fs.mkdirSync(path.join(imagesFolder, "1"));
         fs.mkdirSync(path.join(imagesFolder, "2"));
     }
+
     event.sender.send('num-classes', NUM_CLASSES);//TODO: once >2 classes are available
 });
 
@@ -118,9 +121,9 @@ ipcMain.on('load-preview', async (event) => {
         for( const file of files ) {
             const imagePath = path.join(path.join(app.getPath('userData'), TEMP_FOLDER), file);
             const stat = await fs.promises.stat(imagePath);
-
-            if(stat.isFile()) {
-                event.sender.send('call-preview-image', imagePath);
+            // console.log(file.toString());
+            if(stat.isFile() && extensionList.includes(path.extname(imagePath).substring(1))) {
+                event.sender.send('call-preview-image', [imagePath]);
                 // require('electron').ipcRenderer.send('display-image', filePath);
             }
         }
@@ -134,18 +137,25 @@ ipcMain.on('load-preview', async (event) => {
 });
 
 //once confirmed, images should be moved to main images folder and temp folder should be deleted
-ipcMain.on('temp-to-image', async (event, args) => {
+ipcMain.handle('temp-to-image', async (event, args) => {
     try {
-        const files = await fs.promises.readdir(path.join(app.getPath('userData'), TEMP_FOLDER));
-        for(const file of files) {
-            const imagePath = path.join(app.getPath('userData'), TEMP_FOLDER, file);
-            const uploadPath = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString(), file);
-            fs.copyFile(imagePath, uploadPath, (err) => {
-                if (err) throw err;
-                console.log(imagePath + ' uploaded to ' + uploadPath);
-            });
-        }
-        deleteTemp();
+        new Promise(async (resolve, reject) => {
+            const files = await fs.promises.readdir(path.join(app.getPath('userData'), TEMP_FOLDER));
+            for (const file of files) {
+                const imagePath = path.join(app.getPath('userData'), TEMP_FOLDER, file);
+                const uploadPath = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString(), file);
+                await fs.copyFile(imagePath, uploadPath, (err) => {
+                    if (err) {
+                        reject(err);
+                        throw err;
+                    }
+                    // console.log(imagePath + ' uploaded to ' + uploadPath);
+                });
+            }
+            resolve();
+        }).then(() => {
+            return 0;
+        })
     }
     catch (err) {
         console.log(err);
@@ -153,9 +163,9 @@ ipcMain.on('temp-to-image', async (event, args) => {
 })
 
 //upload to images folder from a directory
-ipcMain.on('image-upload', (event, arg) => {
+ipcMain.on('image-upload', (event) => {
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
-    let tempFolder = path.join(app.getPath('userData'), TEMP_FOLDER)
+    let tempFolder = path.join(app.getPath('userData'), TEMP_FOLDER);
     if (!fs.existsSync(imagesFolder)) {
         fs.mkdirSync(imagesFolder);
         fs.mkdirSync(path.join(imagesFolder, "1"));
@@ -165,8 +175,6 @@ ipcMain.on('image-upload', (event, arg) => {
         fs.mkdirSync(tempFolder);
     }
 
-    console.log('args[0]: ' + arg[0])
-
     // If the platform is 'darwin' (macOS)
     dialog.showOpenDialog({
         title: 'Select the File to be uploaded',
@@ -175,7 +183,7 @@ ipcMain.on('image-upload', (event, arg) => {
         filters: [
         {
         name: 'Text Files',
-        extensions: ['png', 'jpeg', 'jpg']
+        extensions: extensionList
         }, ],
         // Specifying the File Selector and Directory
         // Selector Property In macOS
@@ -187,15 +195,13 @@ ipcMain.on('image-upload', (event, arg) => {
 
             const fileName = path.basename(filePath);
             //0 for temp, 1 for images folder
-            uploadPath = path.join(path.join(app.getPath('userData'), arg[0] === 0 ? TEMP_FOLDER : IMAGES_FOLDER), fileName);
+            uploadPath = path.join(path.join(app.getPath('userData'), TEMP_FOLDER), fileName);
 
             // copy file from original location to app data folder
             fs.copyFile(filePath, uploadPath, (err) => {
                 if (err) throw err;
                 console.log(filePath + ' uploaded to ' + uploadPath);
-                if (arg[0] === 0) {
-                    event.sender.send('preview-modal');
-                }
+                event.sender.send('preview-modal');
             });
         }
     }).catch(err => {
@@ -203,10 +209,57 @@ ipcMain.on('image-upload', (event, arg) => {
     });
 });
 
+ipcMain.on('webcam-temp', async (event, image) => {
+    // console.log(image);
+    let tempFolder = path.join(app.getPath('userData'), TEMP_FOLDER);
+    if (!fs.existsSync(tempFolder)) {
+        fs.mkdirSync(tempFolder);
+    }
+    const data = image.replace(/^data:image\/\w+;base64,/, "");
+    const buf = Buffer.from(data, "base64");
+    await fs.writeFile(path.join(tempFolder, new Date().getTime().toString() + ".png"), buf, function(err, res) {
+        if(err) console.log(err);
+    });
+});
+
 ipcMain.on('delete-temp', (event) => {
     deleteTemp();
+});
+
+ipcMain.handle('load-images-to-model', async (event, tf) => {
+    console.log('loading images')
+    let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
+    let cnt = 0;
+    let inputs = [], outputs = [];
+    return new Promise(async (resolve, reject) => {
+        const files1 = await fs.promises.readdir(path.join(imagesFolder, "1"));
+        for (const file of files1) {
+            await new Promise((resolve, reject) => {
+                const imagePath = path.join(app.getPath('userData'), IMAGES_FOLDER, "1", file);
+                inputs.push(imagePath);
+                outputs.push(0);
+                resolve();
+            });
+        }
+        const files2 = await fs.promises.readdir(path.join(imagesFolder, "2"));
+        for (const file of files2) {
+            await new Promise((resolve, reject) => {
+                const imagePath = path.join(app.getPath('userData'), IMAGES_FOLDER, "2", file);
+                inputs.push(imagePath);
+                outputs.push(1);
+                resolve();
+            });
+        }
+        console.log('done loading ' + new Date().getTime());
+        resolve([inputs, outputs]);
+    });
+});
+
+ipcMain.on('loaded-image-?', (event) => {
+    console.log('done loading image in preload');
 });
 
 
 // test
 //TODO: https://developers.google.com/blockly/guides/app-integration/attribution
+//TODO: https://icons8.com/license
