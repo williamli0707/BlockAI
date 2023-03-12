@@ -22,6 +22,9 @@ Decision-making:
     a "Make Prediction" block that takes in input data and outputs a predicted value or
     class, or a "Deploy Model" block that exports the trained model for use in a
     production environment.
+
+*Prediction - predict some data from either test dataset, or have user upload data to
+    predict
 */
 
 /*
@@ -30,6 +33,7 @@ Color:
     Dataset: 180 degrees (aqua)
     Model: 120 degrees (green)
     Layer: 230 degrees (blue)
+    Prediction: 285 degrees (magenta)
 */
 
 /*
@@ -75,10 +79,30 @@ const blocks = [
         "tooltip": "",
         "helpUrl": ""
     },
-
     {
         "type": "heatmap",
         "message0": "Show a heatmap",
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 0,
+        "tooltip": "",
+        "helpUrl": ""
+    },
+    {
+        "type": "usedata",
+        "kind": "block",
+        "message0": "Use Dataset:  %1 %2",
+        "args0": [
+            {
+                "type": "input_dummy"
+            },
+            {
+                "type": "input_value",
+                "name": "dataset",
+                "check": "dataset"
+            }
+        ],
+        "inputsInline": true,
         "previousStatement": null,
         "nextStatement": null,
         "colour": 0,
@@ -95,10 +119,17 @@ const blocks = [
         "tooltip": "",
         "helpUrl": ""
     },
-
     {
         "type": "mnist",
         "message0": "MMIST",
+        "output": null,
+        "colour": 180,
+        "tooltip": "",
+        "helpUrl": ""
+    },
+    {
+        "type": "userdata",
+        "message0": "My Dataset 1",
         "output": null,
         "colour": 180,
         "tooltip": "",
@@ -220,13 +251,51 @@ const blocks = [
         "tooltip": "tooltip1",
         "helpUrl": ""
     },
+    {
+        "type": "mobilenet",
+        "message0": "Pretrained Feature Vectors #1 - Fast (Mobilenet v3)",
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 230,
+        "tooltip": "",
+        "helpUrl": ""
+    },
 
     //Models
     {
         "type": "cnn_model",
         "kind": "block",
-        "message0": "Sequential Model %1 Layers: %2",
+        "message0": "Sequential Model %1 Optimizer: %2 %3 Epochs: %4 %5 Layers: %6",
         "args0": [
+            {
+                "type": "input_dummy"
+            },
+            {
+                "type": "field_dropdown",
+                "name": "activation",
+                "options": [
+                    [ "adam", "ADAM" ],
+                    [ "adadelta", "ADADELTA" ],
+                    [ "adagrad", "ADAGRAD" ],
+                    [ "adamax", "ADAMAX" ],
+                    [ "ftrl", "FTRL" ],
+                    [ "nadam", "NADAM" ],
+                    [ "optimizer", "OPTIMIZER" ],
+                    [ "rmsprop", "RMSPROP" ],
+                    [ "sgd", "SGD" ],
+                ]
+            },
+            {
+                "type": "input_dummy"
+            },
+            {
+                "type": "field_slider",
+                "name": "rate",
+                "value": 10,
+                "min": 1,
+                "max": 100,
+                "precision": 1
+            },
             {
                 "type": "input_dummy"
             },
@@ -243,12 +312,43 @@ const blocks = [
         "helpUrl": ""
     },
     {
-        "type": "mobilenet",
-        "message0": "Pretrained #1 (Mobilenet v3)",
+        "type": "mobilenet_model",
+        "kind": "block",
+        "message0": "MobileNet v3 Classification Model %1 Layers: %2",
+        "args0": [
+            {
+                "type": "input_dummy"
+            },
+            {
+                "type": "input_statement",
+                "name": "layers",
+                "check": "Layer"
+            }
+        ],
         "previousStatement": null,
         "nextStatement": null,
         "colour": 120,
         "tooltip": "",
         "helpUrl": ""
-    }
+    },
+
+    //Prediction
+    {
+        "type": "prediction-data",
+        "message0": "Try out your new model on sample data",
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 285,
+        "tooltip": "",
+        "helpUrl": ""
+    },
+    {
+        "type": "prediction-webcam",
+        "message0": "Try out your new model on video from your webcam",
+        "previousStatement": null,
+        "nextStatement": null,
+        "colour": 285,
+        "tooltip": "",
+        "helpUrl": ""
+    },
 ]
