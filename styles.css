@@ -3,13 +3,32 @@ body {
     height: 100vh;
 }
 
+#content-full {
+    height: 100%;
+    display: flex;
+    flex-flow: column;
+}
+
+#carousel {
+    flex: 1 1 auto;
+    max-height: calc(100vh - 50px);
+}
+
+#carousel-inner1 {
+    height: 100%;
+}
+
+#carousel-item1 {
+    margin: 0;
+    height: 100%;
+}
+
 #content {
     display: flex;
     flex-flow: column;
-    height: 100vh;
+    height: 100%;
     z-index: 10;
 }
-
 
 #blockly-container {
     flex: 1 1 auto;
@@ -24,17 +43,15 @@ body {
     margin-left: auto;
 }
 
-#image-popup {
+
+#webcam-carousel-video {
     display: flex;
-    height: 90%;
-    width: 90%;
-    /*border-color: #C0C0C0;*/
-    /*border-width: 1px;*/
-    /*border-style: solid;*/
-    position: absolute;
-    z-index: 100;
-    pointer-events: none;
-    visibility: hidden;
+    flex-flow: column;
+}
+
+#webcam-ui-button {
+    width: 100%;
+    flex: 0 0 auto;
 }
 
 #builton_img {
@@ -47,8 +64,53 @@ body {
     bottom: 1%;
 }
 
+#build-content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: row;
+    max-height: 100%;
+    bottom: 1%;
+    top: 1%;
+}
+
+#build-carousel {
+    display: flex;
+    height: 100%;
+    max-height: 100%;
+}
+
+#enable-cam-predict {
+    flex: 0 0 0;
+}
+
+#status {
+    margin: 1%;
+    display: flex;
+    flex-direction: column;
+}
+
 #close-button {
     margin-left: auto;
+}
+
+#predict-body {
+    display: flex;
+    flex-direction: column;
+}
+
+/*#image-webcam-container {*/
+/*    display: flex;*/
+/*    flex-direction: column;*/
+/*}*/
+
+.build-card {
+    flex: 1 1 50%;
+    max-height: 100%;
+}
+
+.webcam {
+    width: 100%;
+    margin-bottom: 10px;
 }
 
 .menu-button {
@@ -61,35 +123,68 @@ body {
     height: 50px;
     width: 100%;
     background-color: #dfdfdf;
-    flex: 0 1 auto;
+    /*flex: 0 1 auto;*/
     display: flex;
     flex-flow: row;
     align-items: center;
+}
+
+.image-list {
+    align-items: start;
+    list-style-type: none;
+}
+
+.image-cont {
+    max-height: 100px;
+    max-width: 100px;
+    object-fit: contain;
+}
+
+.image-item  {
+    float: left;
+    max-height: 100px;
+    max-width: 100px;
+    margin: 5px;
+}
+
+.accordion-collapse {
+    min-height: 120px;
+}
+
+.accordion-item {
+    display: flex;
+    flex-direction: column;
+}
+
+.accordion-image-body {
+    display: flex;
+    flex-direction: column;
+    background-color: #ffffff;
 }
 
 .image-div {
-    height: 100%;
-    width: 100%;
-    position: relative;
-    background-color: #ffffff;
-    flex: 0 1 auto;
+    max-height: 100px;
+    max-width: 100px;
     display: flex;
-    flex-flow: row;
-    align-items: center;
-}
-
-.image {
-    height: 100%;
-    width: 100%;
-    background-color: #ffffff;
-    align-items: center;
 }
 
 .delete-button {
-    height: 75px;
-    width: 75px;
+    max-width: 20px;
+    max-height: 20px;
+    margin: 0;
     position: absolute;
-    top: 1%;
-    right: 1%;
-    visibility: hidden;
+    object-fit: cover;
+    padding: 0;
+}
+
+.image-delete {
+    height: 100%;
+    width: 100%;
+    margin: 0;
+    object-fit: cover;
+    padding: 0;
+}
+
+.webcam-ui-button {
+    flex: 1 1 auto;
 }
