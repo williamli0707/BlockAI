@@ -20,7 +20,16 @@ let disableCam = function() {
     });
 }
 
+
 let enableCam = function () {
+    // chrome.contentSettings.camera.set({primaryPattern:'<all_urls>',setting:'allow'});      // allow|block|ask
+
+    // console.log(chrome)
+
+    // navigator.permissions.query({name: 'camera'})
+    // .then((permissionObj) => {
+    //     console.log(permissionObj.state);
+    // })
     if (hasGetUserMedia()) {
         if(videoPlaying) {
             disableCam();
@@ -31,18 +40,21 @@ let enableCam = function () {
                 width: 224,
                 height: 224
             };
-            navigator.mediaDevices.getUserMedia(constraints).then(function (stream) {
+            navigator.mediaDevices.getUserMedia({video: true}).then(stream => {
                 video.srcObject = stream;
                 webCamStream = stream;
+                console.log("found stream");
                 video.addEventListener('loadeddata', function () {
                     videoPlaying = true;
+                    console.log("adding listener");
                     enableCamButton.textContent = "Disable Webcam"
                     captureImageButton.classList.remove("disabled");
                 });
-            });
+            }, err => console.log(err));
         }
     } else {
         console.warn('getUserMedia() is not supported by your browser');
+        enableCamButton.textContent = "Get User Media Not Supported";
     }
 }
 

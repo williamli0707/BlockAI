@@ -1,0 +1,11 @@
+{
+  "appId": "com.electron.blockai",
+  "productName": "BlockAI",
+  "asar": false,
+  "mac": {
+    "target": [
+      "zip"
+    ],
+    "entitlements": "entitlements.mac.plist"
+  }
+}
