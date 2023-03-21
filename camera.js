@@ -26,10 +26,10 @@ let enableCam = function () {
 
     // console.log(chrome)
 
-    // navigator.permissions.query({name: 'camera'})
-    // .then((permissionObj) => {
-    //     console.log(permissionObj.state);
-    // })
+    navigator.permissions.query({name: 'camera'})
+    .then((permissionObj) => {
+        console.log(permissionObj.state);
+    })
     if (hasGetUserMedia()) {
         if(videoPlaying) {
             disableCam();
