@@ -7,7 +7,7 @@ let state = 0;
 const { app, ipcRenderer, systemPreferences } = require('electron');
 const fs = require('fs');
 const path = require("path");
-let classNum = 2, carousel, webcamCarousel, status;
+let classNum, carousel, webcamCarousel, status;
 let tfLoaded = false;
 let modelTrained = false;
 let trainingDataInputs, trainingDataOutputs;
@@ -170,6 +170,10 @@ window.addEventListener('DOMContentLoaded', () => {
             predict = -1;
         }
     });
+
+    document.getElementById("add-class").addEventListener("click", () => {
+        Code.addClass();
+    });
     //TODO multiple classes
     Code.blockly();
 });
@@ -194,7 +198,7 @@ ipcRenderer.on('call-preview-image', (event, args) => {
     imgNode.classList.add('image-cont');
 
     const deleteNode = document.createElement("button");
-    deleteNode.innerHTML = '<img src="./images/delete-trash.png" class="image-delete"/>';
+    deleteNode.innerHTML = '<img src="./images/trashcan_icon.png" class="image-delete"/>';
     deleteNode.classList.add('btn');
     // deleteNode.classList.add('btn-outline-danger');
     deleteNode.classList.add('delete-button');
@@ -276,7 +280,7 @@ ipcRenderer.on('call-display-image', (event, args) => {
     imgNode.classList.add('image-cont');
 
     const deleteNode = document.createElement("button");
-    deleteNode.innerHTML = '<img src="./images/delete-trash.png" class="image-delete"/>';
+    deleteNode.innerHTML = '<img src="./images/trashcan_icon.png" class="image-delete"/>';
     deleteNode.classList.add('btn');
     // deleteNode.classList.add('btn-outline-danger');
     deleteNode.classList.add('delete-button');
@@ -318,7 +322,7 @@ ipcRenderer.on('done-loading-preview', (event) => {
     document.getElementById("loading-preview").remove();
 });
 
-ipcRenderer.on('num-classes', (event, args) => {
+ipcRenderer.on('set-num-classes', (event, args) => {
     classNum = args;
 });
 
@@ -416,11 +420,7 @@ Code.back = function() {
 }
 
 Code.unloadImages = function() {
-    var imageContainer = document.getElementById('image-container').children;
-
-    while(imageContainer.length) {
-        imageContainer[0].remove();
-    }
+    document.getElementById('images-accordion').remove();
 };
 
 Code.unloadImagesPreview = function() {
@@ -431,13 +431,13 @@ Code.unloadImagesPreview = function() {
 }
 
 Code.loadImages = function() {
-    ipcRenderer.send('ensure-folder');
     let accordion = document.createElement("div");
     accordion.classList.add('accordion');
     accordion.id = 'images-accordion';
 
-    document.getElementById("image-container").appendChild(accordion);
+    document.getElementById("image-container").insertBefore(accordion, document.getElementById('add-class'));
 
+    ipcRenderer.send('ensure-folder');
     ipcRenderer.send('load-images');
 }
 
@@ -449,6 +449,12 @@ Code.loadImagesPreview = function() {
 Code.uploadImages = async function(method) {
     ipcRenderer.send('image-upload');
 }
+
+Code.addClass = function() {
+    ipcRenderer.send('add-class');
+    ++classNum;
+}
+
 
 Code.setURL = function(url) {
     Code.xhr.open('GET', url);
