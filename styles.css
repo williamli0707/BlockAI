@@ -39,10 +39,11 @@ body {
     position: absolute;
 }
 
-#run {
+#menu-right {
     margin-left: auto;
+    display: flex;
+    flex-flow: row;
 }
-
 
 #webcam-carousel-video {
     display: flex;

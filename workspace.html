@@ -22,6 +22,7 @@
 <body>
     <script type="module" src="camera.js"></script>
     <script type="module" src="camera-predict.js"></script>
+    <script type="module" src="help.js"></script>
     <div id="content-full">
         <div id="menu" class="menu">
             <div id="back">
@@ -30,7 +31,8 @@
             <div id="images">
                 <button type="button" id="images-button" class="menu-button btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#images-modal">Images</button>
             </div>
-            <div id="run">
+            <div id="menu-right">
+                <button type="button" id="help-button" class="menu-button btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#help-modal">Help</button>
                 <button type="button" id="run-button" class="menu-button btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#run-confirm-modal">Run</button>
             </div>
         </div>
@@ -40,6 +42,27 @@
                     <div id="content">
                         <div id="blockly-container">
                             <div id="blockly-div"></div>
+                        </div>
+                    </div>
+                    <div id="help-content">
+                        <div class="modal fade" id="help-modal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-labelledby="run-confirm-modal-label" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable modal-xl">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="help-label">Help</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div id="help-modal-body" class="modal-body">
+                                        <p>Here are answers to some of the most common questions: </p>
+                                        <div class="accordion" id="help-accordion">
+
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" id="close-help" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                     <div id="img-content">

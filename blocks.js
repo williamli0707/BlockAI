@@ -76,7 +76,7 @@ const blocks = [
         "previousStatement": null,
         "nextStatement": null,
         "colour": 0,
-        "tooltip": "",
+        "tooltip": "This will load a dataset so that you can use it later. ",
         "helpUrl": ""
     },
     {
@@ -85,7 +85,7 @@ const blocks = [
         "previousStatement": null,
         "nextStatement": null,
         "colour": 0,
-        "tooltip": "",
+        "tooltip": "A heatmap is an image that will show you which areas of your pictures are the most influential in determining what classes your pictures are. ",
         "helpUrl": ""
     },
     {
@@ -106,7 +106,7 @@ const blocks = [
         "previousStatement": null,
         "nextStatement": null,
         "colour": 0,
-        "tooltip": "",
+        "tooltip": "Use this dataset to train your model. ",
         "helpUrl": ""
     },
 
@@ -116,7 +116,7 @@ const blocks = [
         "message0": "CIFAR-10",
         "output": null,
         "colour": 180,
-        "tooltip": "",
+        "tooltip": "CIFAR-10 is a common dataset used, usually as a benchmark or for research, with 10 different classes representing everyday objects, including cars, birds, airplanes, and more. ",
         "helpUrl": ""
     },
     {
@@ -124,7 +124,7 @@ const blocks = [
         "message0": "MMIST",
         "output": null,
         "colour": 180,
-        "tooltip": "",
+        "tooltip": "MNIST is another common dataset used, like CIFAR-10, as a benchmark or for research. MNIST is a dataset with 10 classes, each representing a digit from 1-10. Each class contains images of handwritten digits. ",
         "helpUrl": ""
     },
     {
@@ -132,7 +132,7 @@ const blocks = [
         "message0": "My Dataset 1",
         "output": null,
         "colour": 180,
-        "tooltip": "",
+        "tooltip": "This is the dataset that you create in the Images tab. ",
         "helpUrl": ""
     },
 
@@ -167,7 +167,7 @@ const blocks = [
         "nextStatement": 'Layer',
         "inputsInline": true,
         "colour": 230,
-        "tooltip": "tooltip1",
+        "tooltip": "Conv2D is a layer used in ",
         "helpUrl": ""
     },
     {
