@@ -1,13 +1,13 @@
-/**
+/*
  * namespace for code
  */
 let Code = {};
 //state is 0 when in workspace, 1 when in training state
 let state = 0;
-const { app, ipcRenderer, systemPreferences } = require('electron');
+const { ipcRenderer } = require('electron');
 const fs = require('fs');
 const path = require("path");
-let classNum = 2, carousel, webcamCarousel, status;
+let classNum = 2, carousel, status;
 let tfLoaded = false;
 let modelTrained = false;
 let trainingDataInputs, trainingDataOutputs;
