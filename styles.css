@@ -65,12 +65,12 @@ body {
 }
 
 #build-content {
-    flex: 1 1 auto;
-    display: flex;
-    flex-direction: row;
-    max-height: 100%;
-    bottom: 1%;
-    top: 1%;
+    /*flex: 1 1 auto;*/
+    /*display: flex;*/
+    /*flex-direction: row;*/
+    /*max-height: 100%;*/
+    /*bottom: 1%;*/
+    /*top: 1%;*/
 }
 
 #build-carousel {
