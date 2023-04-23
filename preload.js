@@ -119,7 +119,7 @@ window.addEventListener('DOMContentLoaded', () => {
     document.getElementById("capture-webcam").addEventListener("click", () => {
         let canvas = document.createElement("canvas");
         let ctx = canvas.getContext("2d");
-        console.log(video.offsetHeight + " " + video.offsetWidth)
+        // console.log(video.offsetHeight + " " + video.offsetWidth)
         ctx.drawImage(video, 0, 0, 800, 800, 0, 0 ,224, 224); //??
         // console.log(video.naturalWidth + " " + video.naturalHeight);
         let img = canvas.toDataURL("image/png");
@@ -185,7 +185,7 @@ ipcRenderer.on('call-preview-image', (event, args) => {
     imgNode.classList.add('image-cont');
 
     const deleteNode = document.createElement("button");
-    deleteNode.innerHTML = '<img src="./images/trashcan_icon.png" class="image-delete"/>';
+    deleteNode.innerHTML = '<img src="./images/trash.svg" class="image-delete"/>';
     deleteNode.classList.add('btn');
     // deleteNode.classList.add('btn-outline-danger');
     deleteNode.classList.add('delete-button');
@@ -252,13 +252,13 @@ ipcRenderer.on('accordion-add', (event, args) => {
      accbody.id = "accordion-body" + args;
      list.id = "image-list" + args;
      list.classList.add("image-list");
-     deleteButton.addEventListener("click", () => {
+     deleteButton.addEventListener("click", async () => {
          if(deleteButton.getAttribute("state") === "0") {
              deleteButton.setAttribute("state", "1");
              deleteButton.innerHTML = "<img src=\"./images/x-square-fill.svg\" class=\"image-delete accordion-class-delete\" alt=\"Error loading image\"/>";
          }
          else {
-            Code.deleteClass(args);
+            await Code.deleteClass(args);
          }
      })
      accbody.appendChild(list);
@@ -282,7 +282,7 @@ ipcRenderer.on('call-display-image', (event, args) => {
     imgNode.classList.add('image-cont');
 
     const deleteNode = document.createElement("button");
-    deleteNode.innerHTML = '<img src="./images/trashcan_icon.png" class="image-delete"/>';
+    deleteNode.innerHTML = '<img src="./images/trash.svg" class="image-delete"/>';
     deleteNode.classList.add('btn');
     // deleteNode.classList.add('btn-outline-danger');
     deleteNode.classList.add('delete-button');
@@ -341,11 +341,18 @@ ipcRenderer.on('image-to-model', async (event, args) => {
     })
 });
 
-Code.deleteClass = (num) => {
+Code.deleteClass = async (num) => {
     //check indexing
-    ipcRenderer.send('delete-directory', [num]);
+    // console.log("in code.deleteclass num = " + num);
+    try {
+        await ipcRenderer.invoke('delete-directory', [num]);
+    } catch (err) {
+        if(err == -1) {
+            //2 classes left
+        }
+    }
     for(let i = num + 1; i <= classNum;i++) {
-        ipcRenderer.send('rename-directory', [i, i - 1]);
+        await ipcRenderer.invoke('rename-directory', [i, i - 1]);
     }
     classNum--;
     Code.unloadImages();

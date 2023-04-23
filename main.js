@@ -3,8 +3,9 @@ const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
 const settings = new Store({
-    defaults: {
-        "datasets.0.numClasses": 2,
+    numClasses: {
+        type: 'number',
+        default: 2
     }
 });
 
@@ -79,7 +80,7 @@ deleteTemp = function () {
 }
 
 ipcMain.on('ensure-folder', (event) => {
-    let num_classes = settings.get("datasets.0.numClasses");
+    let num_classes = settings.get("datasets").u.numClasses;
     event.sender.send('set-num-classes', num_classes);
     numClasses = num_classes;
 
@@ -100,7 +101,7 @@ ipcMain.on('ensure-folder', (event) => {
 ipcMain.on('add-class', (event) => {
     ++numClasses;
 
-    settings.set("datasets.0.numClasses", numClasses);
+    settings.set("datasets.u.numClasses", numClasses);
 
     fs.mkdirSync(path.join(path.join(app.getPath('userData'), IMAGES_FOLDER), numClasses.toString()));
 
@@ -280,11 +281,12 @@ ipcMain.handle('load-images-to-model', async (event, tf) => {
     });
 });
 
-ipcMain.handle('rename-directory', (args) => {
+ipcMain.handle('rename-directory', (event, args) => {
     return new Promise((resolve, reject) => {
         try {
-            let oldP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0]);
-            let newP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[1]);
+            let oldP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString());
+            let newP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[1].toString());
+            console.log('renaming ' + oldP + ' to ' + newP);
             fs.renameSync(oldP, newP);
         }
         catch (err) {
@@ -295,11 +297,18 @@ ipcMain.handle('rename-directory', (args) => {
     });
 });
 
-ipcMain.handle('delete-directory', (args) => {
+ipcMain.handle('delete-directory', (event, args) => {
+    if(numClasses === 2) {
+        throw -1;
+    }
     numClasses--;
+    settings.set("datasets.u.numClasses", numClasses);
+    // console.log("numclasses is now " + numClasses);
+    // console.log(args)
     return new Promise((resolve, reject) => {
         try {
-            let oldP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0]);
+            let oldP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString());
+            console.log("deleting: " + oldP);
             fs.rmSync(oldP, {recursive: true});
         }
         catch (err) {
@@ -321,3 +330,5 @@ ipcMain.on('loaded-image-?', (event) => {
 //TODO: dark mode
 //TODO: status indicators for code
 //TODO: delete all code stuff when pressing back
+//TODO: stop user from deleting when only 2 classes left
+//TODO:
