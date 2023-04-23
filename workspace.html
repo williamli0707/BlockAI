@@ -25,7 +25,7 @@
 </head>
 <body>
     <script type="module" src="camera.js"></script>
-    <script type="module" src="camera-predict.js"></script>
+    <script defer src="custom-dialog.js"></script>
     <div id="content-full">
         <div id="menu" class="menu">
             <div id="back">
@@ -42,6 +42,29 @@
             <div class="carousel-inner" id="carousel-inner1">
                 <div class="carousel-item active" id="carousel-item1">
                     <div id="content">
+                        <div class="modal fade" id="var-modal" tabindex="-1" aria-labelledby="images-modal-label" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable modal-xl">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="var-modal-label">New Variable</h5>
+                                        <button id="var-modal-close" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body" id="var-modal-container">
+                                        <form onSubmit="return false;">
+                                            <div class="mb-3">
+                                                <label for="var-name" class="col-form-label" id="var-form-msg">New Variable Name:</label>
+                                                <input type="text" class="form-control" id="var-name">
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" id="var-modal-cancel" class="btn btn-secondary">Close</button>
+                                        <button type="button" id="var-modal-okay" class="btn btn-primary">OK</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="blockly-container">
                             <div id="blockly-div"></div>
                         </div>
@@ -178,23 +201,11 @@
                 </div>
                 <div id="build-carousel" class="carousel-item">
                     <div id="build-content">
-                        <div id="card-train" class="card border-success border-3 overflow-auto build-card">
-                            <div class="card-header">
-                                Model Training
-                            </div>
-                            <div id="status" class="card-body overflow-auto">
+                        <nav class="navbar navbar-light bg-light">
+                            <span class="navbar-brand mb-0 h1">Building your code</span>
+                        </nav>
+                        <div id="status" class="">
 
-                            </div>
-                        </div>
-                        <div id="card-predict" class="card border-3 build-card">
-                            <div class="card-header">
-                                Predict from webcam
-                            </div>
-                            <div class="card-body" id="predict-body">
-                                <video id="webcam-predict" autoplay muted class="webcam" playing="false"></video>
-                                <button class="btn btn-primary webcam-ui-button disabled" id="enable-cam-predict">Enable Webcam</button>
-                                <p id="prediction">Enable your webcam to start predicting. </p>
-                            </div>
                         </div>
                     </div>
                 </div>

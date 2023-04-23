@@ -1,4 +1,4 @@
-const { app, BrowserWindow, ipcMain, dialog, ipcRenderer} = require('electron')
+const { app, BrowserWindow, ipcMain, dialog} = require('electron')
 const path = require('path');
 const fs = require('fs');
 const Store = require('electron-store');
@@ -47,13 +47,13 @@ app.whenReady().then(() => {
     })
 });
 
-ipcMain.on('go-to-creator', e => {
+ipcMain.on('go-to-creator', () => {
     // win.preload = path.join(__dirname, 'creator.js');
     win.loadFile('creator.html').then();
 });
 
-ipcMain.on('go-to-editor', e => {
-    win.close()
+ipcMain.on('go-to-editor', () => {
+    win.close();
     win = new BrowserWindow({
         title: "Project Editor",
         width: WIN_WIDTH,
@@ -70,7 +70,7 @@ ipcMain.on('go-to-editor', e => {
     win.webContents.openDevTools();
 });
 
-ipcMain.on('go-to-home', e => {
+ipcMain.on('go-to-home', () => {
     win.close();
     createHomeWindow();
 });
@@ -105,7 +105,7 @@ ipcMain.on('add-class', (event) => {
 
     fs.mkdirSync(path.join(path.join(app.getPath('userData'), IMAGES_FOLDER), numClasses.toString()));
 
-    event.sender.send('accordion-add', numClasses);
+    event.sender.send('accordion-add', numClasses)
 });
 
 ipcMain.on('load-images', async (event) => {
@@ -244,39 +244,41 @@ ipcMain.on('webcam-temp', async (event, image) => {
     }
     const data = image.replace(/^data:image\/\w+;base64,/, "");
     const buf = Buffer.from(data, "base64");
-    await fs.writeFile(path.join(tempFolder, new Date().getTime().toString() + ".png"), buf, function(err, res) {
+    await fs.writeFile(path.join(tempFolder, new Date().getTime().toString() + ".png"), buf, function(err) {
         if(err) console.log(err);
     });
 });
 
-ipcMain.on('delete-temp', (event) => {
+ipcMain.on('delete-temp', () => {
     deleteTemp();
 });
 
-ipcMain.handle('load-images-to-model', async (event, tf) => {
+ipcMain.handle('load-images-to-model', async () => {
     console.log('loading images')
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
     let inputs = [], outputs = [];
-    return new Promise(async (resolve, reject) => {
-        const files1 = await fs.promises.readdir(path.join(imagesFolder, "1"));
-        for (const file of files1) {
-            await new Promise((resolve, reject) => {
-                const imagePath = path.join(app.getPath('userData'), IMAGES_FOLDER, "1", file);
-                inputs.push(imagePath);
-                outputs.push(0);
-                resolve();
-            });
+    return new Promise(async (resolve) => {
+        for (let i = 0;i < NUM_CLASSES;i++) {
+            const files = await fs.promises.readdir(path.join(imagesFolder, (i + 1).toString()));
+            for (const file of files) {
+                await new Promise((resolve, reject) => {
+                    const imagePath = path.join(imagesFolder, (i + 1).toString(), file);
+                    inputs.push(imagePath);
+                    outputs.push(i);
+                    resolve();
+                });
+            }
+            // for (let j = 0;j < 500;j++) {
+            //     await new Promise((resolve, reject) => {
+            //         const imagePath = path.join(imagesFolder, (i + 1).toString(), j.toString(), ".jpg");
+            //         inputs.push(imagePath);
+            //         outputs.push(i);
+            //         resolve();
+            //     });
+            // }
+
         }
-        const files2 = await fs.promises.readdir(path.join(imagesFolder, "2"));
-        for (const file of files2) {
-            await new Promise((resolve, reject) => {
-                const imagePath = path.join(app.getPath('userData'), IMAGES_FOLDER, "2", file);
-                inputs.push(imagePath);
-                outputs.push(1);
-                resolve();
-            });
-        }
-        console.log('done loading ' + new Date().getTime());
+        // console.log('done loading ' + new Date().getTime());
         resolve([inputs, outputs]);
     });
 });
@@ -322,6 +324,12 @@ ipcMain.handle('delete-directory', (event, args) => {
 ipcMain.on('loaded-image-?', (event) => {
     console.log('done loading image in preload');
 });
+
+ipcMain.handle('getPath', () => {
+    return new Promise((resolve) => {
+        resolve(app.getPath("userData"));
+    });
+})
 
 // test
 //TODO: https://developers.google.com/blockly/guides/app-integration/attribution
