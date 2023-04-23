@@ -93,10 +93,10 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById("images-modal").addEventListener("shown.bs.modal", () => {
-        let loading = document.createElement("p");
-        loading.id = "loading";
-        loading.textContent = "Loading...";
-        document.getElementById("image-container").appendChild(loading);
+        // let loading = document.createElement("p");
+        // loading.id = "loading";
+        // loading.textContent = "Loading...";
+        // document.getElementById("image-container").appendChild(loading);
         Code.loadImages();
     });
 
@@ -124,7 +124,6 @@ window.addEventListener('DOMContentLoaded', () => {
         // console.log(video.naturalWidth + " " + video.naturalHeight);
         let img = canvas.toDataURL("image/png");
         // console.log(img);
-        ipcRenderer.send('ensure-folder');
         ipcRenderer.send('webcam-temp', img);
     });
 
@@ -132,10 +131,10 @@ window.addEventListener('DOMContentLoaded', () => {
         // document.getElementById("images-webcam-next").classList.add("d-none");
         // document.getElementById("webcam-upload-confirm").classList.remove("d-none");
         // document.getElementById("webcam-back").classList.remove("d-none");
-        let loading = document.createElement("p");
-        loading.id = "loading-preview";
-        loading.textContent = "Loading...";
-        document.getElementById("image-preview-container").appendChild(loading);
+        // let loading = document.createElement("p");
+        // loading.id = "loading-preview";
+        // loading.textContent = "Loading...";
+        // document.getElementById("image-preview-container").appendChild(loading);
         console.log("next");
         let previewModal = new bootstrap.Modal(document.getElementById('images-preview'), {});
         previewModal.show();
@@ -147,18 +146,6 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById("webcam-back").classList.add("d-none");
         console.log("prev");
         // webcamCarousel.prev();
-    });
-
-    document.getElementById("upload1").addEventListener("click", () => {
-        ipcRenderer.invoke('temp-to-image', ["1"]).then(() => ipcRenderer.send("delete-temp"));
-        let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
-        imageModal.show();
-    });
-
-    document.getElementById("upload2").addEventListener("click", () => {
-        ipcRenderer.invoke('temp-to-image', ["2"]).then(() => ipcRenderer.send("delete-temp"));
-        let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
-        imageModal.show();
     });
 
     document.getElementById("enable-cam-predict").addEventListener("click", () => {
@@ -236,6 +223,7 @@ ipcRenderer.on('accordion-add', (event, args) => {
      let accordionItem = document.createElement("div");
      let heading = document.createElement("h2");
      let button = document.createElement("button");
+     let deleteButton = document.createElement("button");
      let collapse = document.createElement("div");
      let accbody = document.createElement("div");
      let list = document.createElement("ol");
@@ -244,14 +232,18 @@ ipcRenderer.on('accordion-add', (event, args) => {
      button.classList.add('accordion-button');
      button.type = 'button';
      button.setAttribute("data-bs-toggle", "collapse");
-     button.setAttribute("data-bs-target", "#collapse" + args)
-     button.ariaExpanded = "true";
+     button.setAttribute("data-bs-target", "#collapse" + args);
+     button.classList.add("collapsed")
+     button.ariaExpanded = "false";
      button.setAttribute("aria-controls", "collapse" + args);
+     deleteButton.classList.add("btn");
+     deleteButton.setAttribute("state", "0");
+     deleteButton.innerHTML = "<img src=\"./images/trash.svg\" class=\"image-delete accordion-class-delete\" alt=\"Error loading image\"/>";
      collapse.setAttribute("aria-labelledby", "heading" + args);
      collapse.setAttribute("data-bs-parent", "#images-accordion");
      collapse.classList.add('accordion-collapse');
      collapse.classList.add('collapse');
-     collapse.classList.add('show');
+     // collapse.classList.add('show');
      accbody.classList.add('accordion-image-body');
      heading.id = "heading" + args;
      button.id = "button" + args;
@@ -260,8 +252,18 @@ ipcRenderer.on('accordion-add', (event, args) => {
      accbody.id = "accordion-body" + args;
      list.id = "image-list" + args;
      list.classList.add("image-list");
+     deleteButton.addEventListener("click", () => {
+         if(deleteButton.getAttribute("state") === "0") {
+             deleteButton.setAttribute("state", "1");
+             deleteButton.innerHTML = "<img src=\"./images/x-square-fill.svg\" class=\"image-delete accordion-class-delete\" alt=\"Error loading image\"/>";
+         }
+         else {
+            Code.deleteClass(args);
+         }
+     })
      accbody.appendChild(list);
      heading.appendChild(button);
+     heading.appendChild(deleteButton);
      collapse.appendChild(accbody);
      accordionItem.appendChild(heading);
      accordionItem.appendChild(collapse);
@@ -314,13 +316,13 @@ ipcRenderer.on('call-display-image', (event, args) => {
     });
 });
 
-ipcRenderer.on('done-loading', (event) => {
-    document.getElementById("loading").remove();
-});
-
-ipcRenderer.on('done-loading-preview', (event) => {
-    document.getElementById("loading-preview").remove();
-});
+// ipcRenderer.on('done-loading', (event) => {
+//     document.getElementById("loading").remove();
+// });
+//
+// ipcRenderer.on('done-loading-preview', (event) => {
+//     document.getElementById("loading-preview").remove();
+// });
 
 ipcRenderer.on('set-num-classes', (event, args) => {
     classNum = args;
@@ -338,6 +340,17 @@ ipcRenderer.on('image-to-model', async (event, args) => {
         }
     })
 });
+
+Code.deleteClass = (num) => {
+    //check indexing
+    ipcRenderer.send('delete-directory', [num]);
+    for(let i = num + 1; i <= classNum;i++) {
+        ipcRenderer.send('rename-directory', [i, i - 1]);
+    }
+    classNum--;
+    Code.unloadImages();
+    Code.loadImages();
+}
 
 Code.loadTensorflow = async function() {
     //TODO
@@ -428,6 +441,11 @@ Code.unloadImagesPreview = function() {
     while(imageListPreview.length) {
         imageListPreview[0].remove();
     }
+
+    let imageClassList = document.getElementById("upload-list").children;
+    while(imageClassList.length) {
+        imageClassList[0].remove();
+    }
 }
 
 Code.loadImages = function() {
@@ -442,7 +460,19 @@ Code.loadImages = function() {
 }
 
 Code.loadImagesPreview = function() {
-    console.log("loadImagesPreview")
+    for(let i = 1;i <= classNum;i++) {
+        let list = document.createElement("li");
+        let btn = document.createElement("button");
+        btn.id = "upload" + i.toString();
+        btn.classList.add("dropdown-item");
+        btn.setAttribute("data-bs-dismiss", "modal");
+        btn.textContent = "Upload to class " + i.toString();
+        list.appendChild(btn);
+        btn.addEventListener('click', () => {
+            ipcRenderer.invoke('temp-to-image', [i.toString()]).then(() => ipcRenderer.send("delete-temp"));
+        })
+        document.getElementById("upload-list").appendChild(list);
+    }
     ipcRenderer.send('load-preview');
 }
 

@@ -1,12 +1,17 @@
 const { app, BrowserWindow, ipcMain, dialog, ipcRenderer} = require('electron')
 const path = require('path');
 const fs = require('fs');
+const Store = require('electron-store');
+const settings = new Store({
+    defaults: {
+        "datasets.0.numClasses": 2,
+    }
+});
+
 WIN_WIDTH = 1280;
 WIN_HEIGHT = 720;
 IMAGES_FOLDER = "images_folder";
-DATASET_FILE = "dataset.json";
 PPREVIEW_FOLDER = "preview_folder";
-let getJSON = require("jquery");
 let win;
 let numClasses;
 let extensionList = ["png", "jpg", "jpeg"];
@@ -62,21 +67,7 @@ ipcMain.on('go-to-editor', e => {
     })
     win.loadFile('workspace.html').then();
     win.webContents.openDevTools();
-
-    initDataset();
 });
-
-initDataset = function() {
-    let dataset = {
-        num_classes: 2
-    };
-
-    let datasetFile = path.join(app.getPath('userData'), DATASET_FILE);
-    if (!fs.existsSync(datasetFile)) {
-        fs.writeFileSync(datasetFile, JSON.stringify(dataset));
-    }
-    numClasses = 2;
-}
 
 ipcMain.on('go-to-home', e => {
     win.close();
@@ -88,9 +79,9 @@ deleteTemp = function () {
 }
 
 ipcMain.on('ensure-folder', (event) => {
-    var dataset = JSON.parse(fs.readFileSync(path.join(app.getPath('userData'), DATASET_FILE)));
-    event.sender.send('set-num-classes', dataset.num_classes);
-    numClasses = dataset.num_classes;
+    let num_classes = settings.get("datasets.0.numClasses");
+    event.sender.send('set-num-classes', num_classes);
+    numClasses = num_classes;
 
     console.log('ensuring: ' + numClasses);
 
@@ -109,14 +100,11 @@ ipcMain.on('ensure-folder', (event) => {
 ipcMain.on('add-class', (event) => {
     ++numClasses;
 
-    let datasetFile = path.join(app.getPath('userData'), DATASET_FILE);
-    let dataset = JSON.parse(fs.readFileSync(datasetFile));
-    dataset.num_classes = numClasses;
-    fs.writeFileSync(datasetFile, JSON.stringify(dataset));
+    settings.set("datasets.0.numClasses", numClasses);
 
     fs.mkdirSync(path.join(path.join(app.getPath('userData'), IMAGES_FOLDER), numClasses.toString()));
 
-    event.sender.send('accordion-add', dataset.num_classes);
+    event.sender.send('accordion-add', numClasses);
 });
 
 ipcMain.on('load-images', async (event) => {
@@ -139,7 +127,7 @@ ipcMain.on('load-images', async (event) => {
             }
         }
 
-        event.sender.send('done-loading');
+        // event.sender.send('done-loading');
     }
     catch(err) {
         console.log(err);
@@ -166,7 +154,7 @@ ipcMain.on('load-preview', async (event) => {
             }
         }
 
-        event.sender.send('done-loading-preview');
+        // event.sender.send('done-loading-preview');
     }
     catch(err) {
         console.log(err);
@@ -267,7 +255,6 @@ ipcMain.on('delete-temp', (event) => {
 ipcMain.handle('load-images-to-model', async (event, tf) => {
     console.log('loading images')
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
-    let cnt = 0;
     let inputs = [], outputs = [];
     return new Promise(async (resolve, reject) => {
         const files1 = await fs.promises.readdir(path.join(imagesFolder, "1"));
@@ -293,6 +280,36 @@ ipcMain.handle('load-images-to-model', async (event, tf) => {
     });
 });
 
+ipcMain.handle('rename-directory', (args) => {
+    return new Promise((resolve, reject) => {
+        try {
+            let oldP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0]);
+            let newP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[1]);
+            fs.renameSync(oldP, newP);
+        }
+        catch (err) {
+            console.log(err);
+            reject(err);
+        }
+        resolve();
+    });
+});
+
+ipcMain.handle('delete-directory', (args) => {
+    numClasses--;
+    return new Promise((resolve, reject) => {
+        try {
+            let oldP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0]);
+            fs.rmSync(oldP, {recursive: true});
+        }
+        catch (err) {
+            console.log(err);
+            reject(err);
+        }
+        resolve();
+    });
+});
+
 ipcMain.on('loaded-image-?', (event) => {
     console.log('done loading image in preload');
 });
@@ -300,3 +317,7 @@ ipcMain.on('loaded-image-?', (event) => {
 // test
 //TODO: https://developers.google.com/blockly/guides/app-integration/attribution
 //TODO: https://icons8.com/license
+
+//TODO: dark mode
+//TODO: status indicators for code
+//TODO: delete all code stuff when pressing back
