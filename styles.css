@@ -98,10 +98,30 @@ body {
     flex-direction: column;
 }
 
+#upload-list {
+    max-height: 140px;
+    overflow-y: auto;
+    position: fixed;
+    z-index: 5000;
+}
+
+.modal-footer {
+    overflow-y: visible;
+}
+
 /*#image-webcam-container {*/
 /*    display: flex;*/
 /*    flex-direction: column;*/
 /*}*/
+
+.accordion-header {
+    display: flex;
+    flex-flow: row;
+}
+
+.accordion-class-delete {
+    max-height: 20px;
+}
 
 .build-card {
     flex: 1 1 50%;

@@ -1,12 +1,20 @@
 const { app, BrowserWindow, ipcMain, dialog} = require('electron')
 const path = require('path');
 const fs = require('fs');
+const Store = require('electron-store');
+const settings = new Store({
+    numClasses: {
+        type: 'number',
+        default: 2
+    }
+});
+
 WIN_WIDTH = 1280;
 WIN_HEIGHT = 720;
 IMAGES_FOLDER = "images_folder";
-TEMP_FOLDER = "temp_folder"
+PPREVIEW_FOLDER = "preview_folder";
 let win;
-NUM_CLASSES = 2;
+let numClasses;
 let extensionList = ["png", "jpg", "jpeg"];
 
 const createHomeWindow = () => {
@@ -59,7 +67,7 @@ ipcMain.on('go-to-editor', () => {
         // titleBarStyle: "hidden"
     })
     win.loadFile('workspace.html').then();
-    win.webContents.openDevTools()
+    win.webContents.openDevTools();
 });
 
 ipcMain.on('go-to-home', () => {
@@ -68,26 +76,45 @@ ipcMain.on('go-to-home', () => {
 });
 
 deleteTemp = function () {
-    fs.rmSync(path.join(path.join(app.getPath('userData'), TEMP_FOLDER)), { recursive: true, force: true });
+    fs.rmSync(path.join(path.join(app.getPath('userData'), PPREVIEW_FOLDER)), { recursive: true, force: true });
 }
 
 ipcMain.on('ensure-folder', (event) => {
+    let num_classes = settings.get("datasets").u.numClasses;
+    event.sender.send('set-num-classes', num_classes);
+    numClasses = num_classes;
+
+    console.log('ensuring: ' + numClasses);
+
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
     if (!fs.existsSync(imagesFolder)) {
         fs.mkdirSync(imagesFolder);
-        fs.mkdirSync(path.join(imagesFolder, "1"));
-        fs.mkdirSync(path.join(imagesFolder, "2"));
     }
 
-    // event.sender.send('num-classes', NUM_CLASSES);//TODO: once >2 classes are available
+    for (let i = 1; i <= numClasses; i++) {
+        if (!fs.existsSync(path.join(imagesFolder, i.toString()))) {
+            fs.mkdirSync(path.join(imagesFolder, i.toString()));
+        }
+    }
+});
+
+ipcMain.on('add-class', (event) => {
+    ++numClasses;
+
+    settings.set("datasets.u.numClasses", numClasses);
+
+    fs.mkdirSync(path.join(path.join(app.getPath('userData'), IMAGES_FOLDER), numClasses.toString()));
+
+    event.sender.send('accordion-add', numClasses)
 });
 
 ipcMain.on('load-images', async (event) => {
     try {
         // Get the files as an array
         let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
+        console.log(numClasses);
 
-        for(let i = 1;i <= NUM_CLASSES;i++) {
+        for(let i = 1; i <= numClasses; i++) {
             event.sender.send('accordion-add', i);
             const files = await fs.promises.readdir(path.join(imagesFolder, i.toString()));
             for( const file of files ) {
@@ -101,7 +128,7 @@ ipcMain.on('load-images', async (event) => {
             }
         }
 
-        event.sender.send('done-loading');
+        // event.sender.send('done-loading');
     }
     catch(err) {
         console.log(err);
@@ -112,14 +139,14 @@ ipcMain.on('load-images', async (event) => {
 ipcMain.on('load-preview', async (event) => {
     try {
         // Get the files as an array
-        if (!fs.existsSync(path.join(app.getPath('userData'), TEMP_FOLDER))) {
-            fs.mkdirSync(path.join(app.getPath('userData'), TEMP_FOLDER));
+        if (!fs.existsSync(path.join(app.getPath('userData'), PPREVIEW_FOLDER))) {
+            fs.mkdirSync(path.join(app.getPath('userData'), PPREVIEW_FOLDER));
         }
 
-        const files = await fs.promises.readdir(path.join(app.getPath('userData'), TEMP_FOLDER));
+        const files = await fs.promises.readdir(path.join(app.getPath('userData'), PPREVIEW_FOLDER));
 
         for( const file of files ) {
-            const imagePath = path.join(path.join(app.getPath('userData'), TEMP_FOLDER), file);
+            const imagePath = path.join(path.join(app.getPath('userData'), PPREVIEW_FOLDER), file);
             const stat = await fs.promises.stat(imagePath);
             // console.log(file.toString());
             if(stat.isFile() && extensionList.includes(path.extname(imagePath).substring(1))) {
@@ -128,7 +155,7 @@ ipcMain.on('load-preview', async (event) => {
             }
         }
 
-        event.sender.send('done-loading-preview');
+        // event.sender.send('done-loading-preview');
     }
     catch(err) {
         console.log(err);
@@ -140,9 +167,9 @@ ipcMain.on('load-preview', async (event) => {
 ipcMain.handle('temp-to-image', async (event, args) => {
     try {
         new Promise(async (resolve, reject) => {
-            const files = await fs.promises.readdir(path.join(app.getPath('userData'), TEMP_FOLDER));
+            const files = await fs.promises.readdir(path.join(app.getPath('userData'), PPREVIEW_FOLDER));
             for (const file of files) {
-                const imagePath = path.join(app.getPath('userData'), TEMP_FOLDER, file);
+                const imagePath = path.join(app.getPath('userData'), PPREVIEW_FOLDER, file);
                 const uploadPath = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString(), file);
                 await fs.copyFile(imagePath, uploadPath, (err) => {
                     if (err) {
@@ -165,7 +192,7 @@ ipcMain.handle('temp-to-image', async (event, args) => {
 //upload to images folder from a directory
 ipcMain.on('image-upload', (event) => {
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
-    let tempFolder = path.join(app.getPath('userData'), TEMP_FOLDER);
+    let tempFolder = path.join(app.getPath('userData'), PPREVIEW_FOLDER);
     if (!fs.existsSync(imagesFolder)) {
         fs.mkdirSync(imagesFolder);
         fs.mkdirSync(path.join(imagesFolder, "1"));
@@ -195,7 +222,7 @@ ipcMain.on('image-upload', (event) => {
 
             const fileName = path.basename(filePath);
             //0 for temp, 1 for images folder
-            uploadPath = path.join(path.join(app.getPath('userData'), TEMP_FOLDER), fileName);
+            uploadPath = path.join(path.join(app.getPath('userData'), PPREVIEW_FOLDER), fileName);
 
             // copy file from original location to app data folder
             fs.copyFile(filePath, uploadPath, (err) => {
@@ -211,7 +238,7 @@ ipcMain.on('image-upload', (event) => {
 
 ipcMain.on('webcam-temp', async (event, image) => {
     // console.log(image);
-    let tempFolder = path.join(app.getPath('userData'), TEMP_FOLDER);
+    let tempFolder = path.join(app.getPath('userData'), PPREVIEW_FOLDER);
     if (!fs.existsSync(tempFolder)) {
         fs.mkdirSync(tempFolder);
     }
@@ -229,7 +256,6 @@ ipcMain.on('delete-temp', () => {
 ipcMain.handle('load-images-to-model', async () => {
     console.log('loading images')
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
-    let cnt = 0;
     let inputs = [], outputs = [];
     return new Promise(async (resolve) => {
         for (let i = 0;i < NUM_CLASSES;i++) {
@@ -257,7 +283,45 @@ ipcMain.handle('load-images-to-model', async () => {
     });
 });
 
-ipcMain.on('loaded-image-?', () => {
+ipcMain.handle('rename-directory', (event, args) => {
+    return new Promise((resolve, reject) => {
+        try {
+            let oldP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString());
+            let newP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[1].toString());
+            console.log('renaming ' + oldP + ' to ' + newP);
+            fs.renameSync(oldP, newP);
+        }
+        catch (err) {
+            console.log(err);
+            reject(err);
+        }
+        resolve();
+    });
+});
+
+ipcMain.handle('delete-directory', (event, args) => {
+    if(numClasses === 2) {
+        throw -1;
+    }
+    numClasses--;
+    settings.set("datasets.u.numClasses", numClasses);
+    // console.log("numclasses is now " + numClasses);
+    // console.log(args)
+    return new Promise((resolve, reject) => {
+        try {
+            let oldP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString());
+            console.log("deleting: " + oldP);
+            fs.rmSync(oldP, {recursive: true});
+        }
+        catch (err) {
+            console.log(err);
+            reject(err);
+        }
+        resolve();
+    });
+});
+
+ipcMain.on('loaded-image-?', (event) => {
     console.log('done loading image in preload');
 });
 
@@ -267,7 +331,12 @@ ipcMain.handle('getPath', () => {
     });
 })
 
-
 // test
 //TODO: https://developers.google.com/blockly/guides/app-integration/attribution
 //TODO: https://icons8.com/license
+
+//TODO: dark mode
+//TODO: status indicators for code
+//TODO: delete all code stuff when pressing back
+//TODO: stop user from deleting when only 2 classes left
+//TODO:
