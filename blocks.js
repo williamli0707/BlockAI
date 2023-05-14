@@ -267,6 +267,10 @@ const blocks = [
             {
                 "type": "field_number",
                 "name": "num_neurons",
+                "value": 64,
+                "min": 1,
+                "max": 5000,
+                "precision": 1,
             },
             {
                 "type": "field_dropdown",

@@ -10,10 +10,7 @@ const path = require("path");
 const {javascriptGenerator} = require("blockly/javascript");
 let classNum = 2, carousel, status;
 let tfLoaded = false;
-let modelTrained = false;
 let dataPath;
-let model;
-let predict = -1;
 let video, video2;
 // const { MobileNetv3FeatureVectorModel, Sequential } = require("./models.js");
 // const { ImageDataset, Dataset, DefaultDataset } = require("./datasets.js");
@@ -53,7 +50,7 @@ window.addEventListener('DOMContentLoaded', async () => {
     });
 
     document.getElementById("run-button").addEventListener("click", () => {
-        console.log(javascriptGenerator.workspaceToCode());
+        console.log(javascriptGenerator.workspaceToCode(Code.workspace));
         console.log(Code.getCode());
     })
 
@@ -63,6 +60,12 @@ window.addEventListener('DOMContentLoaded', async () => {
         starting.textContent = "Starting up..."
         starting.id = "startup";
         document.getElementById("status").appendChild(starting);
+
+
+
+        console.log(Code.Blockly.serialization.workspaces.save(Code.workspace));
+        Code.save();
+
         window.console.log = function(str) {
             let node = document.createElement("div");
             if (typeof str == 'object') {
@@ -121,6 +124,15 @@ window.addEventListener('DOMContentLoaded', async () => {
         ipcRenderer.send('delete-temp');
     });
 
+    document.getElementById("webcam-preview").addEventListener("shown.bs.modal", async () => {
+        ipcRenderer.send('ensure-folder');
+        document.getElementById("images-taken-count").innerText = await ipcRenderer.invoke("get-temp-images") + " images taken";
+    });
+
+    document.getElementById("webcam-preview").addEventListener("hidden.bs.modal", async () => {
+        document.getElementById("images-taken-count").innerText = "0" + " images taken";
+    });
+
     document.getElementById("capture-webcam").addEventListener("click", () => {
         let canvas = document.createElement("canvas");
         let ctx = canvas.getContext("2d");
@@ -129,6 +141,8 @@ window.addEventListener('DOMContentLoaded', async () => {
         // console.log(video.naturalWidth + " " + video.naturalHeight);
         let img = canvas.toDataURL("image/png");
         canvas.remove();
+        currWebcamImageCount++;
+        document.getElementById("images-taken-count").innerText = currWebcamImageCount.toString() + " images taken";
         // console.log(img);
         ipcRenderer.send('webcam-temp', img);
     });
@@ -151,16 +165,6 @@ window.addEventListener('DOMContentLoaded', async () => {
         document.getElementById("webcam-upload-confirm").classList.add("d-none");
         document.getElementById("webcam-back").classList.add("d-none");
         // webcamCarousel.prev();
-    });
-
-    document.getElementById("enable-cam-predict").addEventListener("click", () => {
-        if(predict === -1) {
-            predict = 1;
-            Code.predictLoop();
-        }
-        else {
-            predict = -1;
-        }
     });
 
     document.getElementById("add-class").addEventListener("click", () => {
@@ -359,7 +363,7 @@ Code.getCode = () => {
         "    console.log('Data for epoch ' + epoch);\n" +
         "    console.log(logs);\n" +
         "}\n";
-    code += javascriptGenerator.workspaceToCode();
+    code += javascriptGenerator.workspaceToCode(Code.workspace);
     return code;
 }
 
@@ -374,16 +378,20 @@ Code.exec = async () => {
     // document.getElementById("run-content").appendChild(sc);
 }
 
+Code.save = function () {
+    ipcRenderer.send("save-workspace", Code.Blockly.serialization.workspaces.save(Code.workspace));
+}
+
 Code.back = function() {
     if(!state) {
         require('electron').ipcRenderer.send('go-to-home');
     }
     else {
-        carousel.prev();
-        state = 0;
-        document.getElementById('run-button').classList.remove('d-none');
-        document.getElementById('images-button').classList.remove('d-none');
-
+        // carousel.prev();
+        // state = 0;
+        // document.getElementById('run-button').classList.remove('d-none');
+        // document.getElementById('images-button').classList.remove('d-none');
+        ipcRenderer.send('go-to-editor');
     }
 }
 
@@ -503,7 +511,7 @@ Code.exp = function(){    // export stuff to server
     })
 }
 
-Code.blockly = function() {
+Code.blockly = async function () {
     Code.Blockly = require('blockly');
     require('@blockly/field-slider');
     const blocklyArea = document.getElementById('blockly-container');
@@ -529,4 +537,15 @@ Code.blockly = function() {
     };
     window.addEventListener('resize', Code.onresize, false);
     Code.onresize();
+
+    function saveEvent(event) {
+        if (event.isUiEvent) {
+            return;  // Don't mirror UI events.
+        }
+        Code.save();
+    }
+
+    Code.workspace.addChangeListener(saveEvent);
+
+    Code.Blockly.serialization.workspaces.load(await ipcRenderer.invoke('get-workspace'), Code.workspace);
 }

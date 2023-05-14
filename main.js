@@ -6,13 +6,16 @@ const settings = new Store({
     numClasses: {
         type: 'number',
         default: 2
+    },
+    workspace: {
+        default: {}
     }
 });
 
 WIN_WIDTH = 1280;
 WIN_HEIGHT = 720;
 IMAGES_FOLDER = "images_folder";
-PPREVIEW_FOLDER = "preview_folder";
+PREVIEW_FOLDER = "preview_folder";
 let win;
 let numClasses;
 let extensionList = ["png", "jpg", "jpeg"];
@@ -76,7 +79,7 @@ ipcMain.on('go-to-home', () => {
 });
 
 deleteTemp = function () {
-    fs.rmSync(path.join(path.join(app.getPath('userData'), PPREVIEW_FOLDER)), { recursive: true, force: true });
+    fs.rmSync(path.join(path.join(app.getPath('userData'), PREVIEW_FOLDER)), { recursive: true, force: true });
 }
 
 ipcMain.on('ensure-folder', (event) => {
@@ -89,6 +92,11 @@ ipcMain.on('ensure-folder', (event) => {
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
     if (!fs.existsSync(imagesFolder)) {
         fs.mkdirSync(imagesFolder);
+    }
+
+    let previewFolder = path.join(app.getPath('userData'), PREVIEW_FOLDER);
+    if (!fs.existsSync(previewFolder)) {
+        fs.mkdirSync(previewFolder);
     }
 
     for (let i = 1; i <= numClasses; i++) {
@@ -139,14 +147,14 @@ ipcMain.on('load-images', async (event) => {
 ipcMain.on('load-preview', async (event) => {
     try {
         // Get the files as an array
-        if (!fs.existsSync(path.join(app.getPath('userData'), PPREVIEW_FOLDER))) {
-            fs.mkdirSync(path.join(app.getPath('userData'), PPREVIEW_FOLDER));
+        if (!fs.existsSync(path.join(app.getPath('userData'), PREVIEW_FOLDER))) {
+            fs.mkdirSync(path.join(app.getPath('userData'), PREVIEW_FOLDER));
         }
 
-        const files = await fs.promises.readdir(path.join(app.getPath('userData'), PPREVIEW_FOLDER));
+        const files = await fs.promises.readdir(path.join(app.getPath('userData'), PREVIEW_FOLDER));
 
         for( const file of files ) {
-            const imagePath = path.join(path.join(app.getPath('userData'), PPREVIEW_FOLDER), file);
+            const imagePath = path.join(path.join(app.getPath('userData'), PREVIEW_FOLDER), file);
             const stat = await fs.promises.stat(imagePath);
             // console.log(file.toString());
             if(stat.isFile() && extensionList.includes(path.extname(imagePath).substring(1))) {
@@ -167,9 +175,9 @@ ipcMain.on('load-preview', async (event) => {
 ipcMain.handle('temp-to-image', async (event, args) => {
     try {
         new Promise(async (resolve, reject) => {
-            const files = await fs.promises.readdir(path.join(app.getPath('userData'), PPREVIEW_FOLDER));
+            const files = await fs.promises.readdir(path.join(app.getPath('userData'), PREVIEW_FOLDER));
             for (const file of files) {
-                const imagePath = path.join(app.getPath('userData'), PPREVIEW_FOLDER, file);
+                const imagePath = path.join(app.getPath('userData'), PREVIEW_FOLDER, file);
                 const uploadPath = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString(), file);
                 await fs.copyFile(imagePath, uploadPath, (err) => {
                     if (err) {
@@ -189,10 +197,14 @@ ipcMain.handle('temp-to-image', async (event, args) => {
     }
 })
 
+ipcMain.on('save-workspace', (event, args) => {
+    settings.set("workspace", args);
+});
+
 //upload to images folder from a directory
 ipcMain.on('image-upload', (event) => {
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
-    let tempFolder = path.join(app.getPath('userData'), PPREVIEW_FOLDER);
+    let tempFolder = path.join(app.getPath('userData'), PREVIEW_FOLDER);
     if (!fs.existsSync(imagesFolder)) {
         fs.mkdirSync(imagesFolder);
         fs.mkdirSync(path.join(imagesFolder, "1"));
@@ -222,7 +234,7 @@ ipcMain.on('image-upload', (event) => {
 
             const fileName = path.basename(filePath);
             //0 for temp, 1 for images folder
-            uploadPath = path.join(path.join(app.getPath('userData'), PPREVIEW_FOLDER), fileName);
+            uploadPath = path.join(path.join(app.getPath('userData'), PREVIEW_FOLDER), fileName);
 
             // copy file from original location to app data folder
             fs.copyFile(filePath, uploadPath, (err) => {
@@ -238,7 +250,7 @@ ipcMain.on('image-upload', (event) => {
 
 ipcMain.on('webcam-temp', async (event, image) => {
     // console.log(image);
-    let tempFolder = path.join(app.getPath('userData'), PPREVIEW_FOLDER);
+    let tempFolder = path.join(app.getPath('userData'), PREVIEW_FOLDER);
     if (!fs.existsSync(tempFolder)) {
         fs.mkdirSync(tempFolder);
     }
@@ -329,7 +341,18 @@ ipcMain.handle('getPath', () => {
     return new Promise((resolve) => {
         resolve(app.getPath("userData"));
     });
+});
+
+ipcMain.handle('get-workspace', () => {
+    return new Promise((resolve, reject) => {
+        resolve(settings.get("workspace"));
+    });
 })
+
+ipcMain.handle('get-temp-images', async () => {
+    let tmp = await fs.promises.readdir(path.join(app.getPath('userData'), PREVIEW_FOLDER));
+    return tmp.length;
+});
 
 // test
 //TODO: https://developers.google.com/blockly/guides/app-integration/attribution

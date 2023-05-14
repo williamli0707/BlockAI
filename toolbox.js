@@ -64,11 +64,11 @@ const toolbox = {
             "colour": "120",
             contents: [
                 {
-                    "type": "cnn_model",
+                    "type": "mobilenet_model",
                     "kind": "block",
                 },
                 {
-                    "type": "mobilenet_model",
+                    "type": "cnn_model",
                     "kind": "block",
                 },
             ]
@@ -78,6 +78,10 @@ const toolbox = {
             "name": "Layers",
             "colour": "230",
             contents: [
+                {
+                    "type": "dense",
+                    "kind": "block",
+                },
                 {
                     "type": "conv2d",
                     "kind": "block",
@@ -94,10 +98,6 @@ const toolbox = {
                     "type": "dropout",
                     "kind": "block"
                 },
-                {
-                    "type": "dense",
-                    "kind": "block",
-                }
             ]
         },
         {
