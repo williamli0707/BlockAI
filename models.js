@@ -111,7 +111,7 @@ class MobileNetv3FeatureVectorModel extends Sequential {
         let inputs = [], outputs = [];
         let inputPaths = res[0];
         let self = this;
-        console.log(res);
+        // console.log(res);
         for (let imgPath in inputPaths) {
             await new Promise((resolve, reject) => {
                 let img = new Image();

@@ -126,7 +126,8 @@ window.addEventListener('DOMContentLoaded', async () => {
 
     document.getElementById("webcam-preview").addEventListener("shown.bs.modal", async () => {
         ipcRenderer.send('ensure-folder');
-        document.getElementById("images-taken-count").innerText = await ipcRenderer.invoke("get-temp-images") + " images taken";
+        currWebcamImageCount = await ipcRenderer.invoke("get-temp-images")
+        document.getElementById("images-taken-count").innerText = currWebcamImageCount + " images taken";
     });
 
     document.getElementById("webcam-preview").addEventListener("hidden.bs.modal", async () => {

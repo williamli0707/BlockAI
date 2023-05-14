@@ -24,8 +24,17 @@ class ImageDataset extends Dataset {
         let imagesFolder = this.#pathToDataset;
         let folders = await fs.promises.readdir(imagesFolder);
         this.numClasses = folders.length;
+        // console.log("number of classes: " + this.numClasses.toString())
+        // console.log(folders);
+        if (folders.includes('.DS_Store')) this.numClasses--;
         return new Promise(async (resolve) => {
             for (let i = 0;i < self.numClasses;i++) {
+
+                if(!folders.includes((i + 1).toString())) {
+                    this.numClasses = i;
+                    break;
+                }
+
                 const files = await fs.promises.readdir(path.join(imagesFolder, (i + 1).toString()));
                 for (const file of files) {
                     await new Promise((resolve, reject) => {
@@ -37,7 +46,7 @@ class ImageDataset extends Dataset {
                 }
 
             }
-            console.log("outputs: " + self.outputs)
+            // console.log("outputs: " + self.outputs)
             resolve([self.inputs, self.outputs]);
         });
     }

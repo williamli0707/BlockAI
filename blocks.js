@@ -69,7 +69,7 @@ const blocks = [
         "previousStatement": null,
         "nextStatement": null,
         "colour": 0,
-        "tooltip": "",
+        "tooltip": "A heatmap is an image that will show you which areas of your pictures are the most influential in determining what classes your pictures are. ",
         "helpUrl": ""
     },
 
@@ -88,8 +88,6 @@ const blocks = [
         "nextStatement": null,
         "colour": 45,
         "tooltip": "This will load a dataset so that you can use it later. ",
-        "colour": 45,
-        "tooltip": "",
         "helpUrl": ""
     },
     {
@@ -121,7 +119,7 @@ const blocks = [
         "previousStatement": null,
         "nextStatement": null,
         "colour": 45,
-        "tooltip": "A heatmap is an image that will show you which areas of your pictures are the most influential in determining what classes your pictures are. ",
+        "tooltip": "",
         "helpUrl": ""
     },
     {
@@ -209,7 +207,7 @@ const blocks = [
         "nextStatement": 'Layer',
         "inputsInline": true,
         "colour": 230,
-        "tooltip": "Conv2D is a layer used in ",
+        "tooltip": "Conv2D scans the input image using small filters or kernels, looking for specific patterns. It convolves or slides these filters across the image, applying mathematical operations to extract important features. ",
         "helpUrl": ""
     },
     {
@@ -221,7 +219,7 @@ const blocks = [
         "inputsInline": true,
         "colour": 230,
         "tooltip": "tooltip2",
-        "helpUrl": ""
+        "helpUrl": "MaxPooling2D helps to retain the essential features while reducing the computational complexity of the network."
     },
     {
         "type": "flatten",
@@ -232,7 +230,7 @@ const blocks = [
         "inputsInline": true,
         "colour": 230,
         "tooltip": "tooltip2",
-        "helpUrl": ""
+        "helpUrl": "Flatten transforms the output from the convolutional layers into a format that a regular neural network can understand."
     },
     {
         "type": "dropout",
@@ -255,7 +253,7 @@ const blocks = [
         "previousStatement": null,
         "nextStatement": null,
         "colour": 230,
-        "tooltip": "",
+        "tooltip": "Dropout encourages a neural network to be more versatile and not rely too heavily on specific neurons. This helps prevent overfitting. ",
         "helpUrl": ""
     },
     {
@@ -294,7 +292,7 @@ const blocks = [
         "nextStatement": null,
         "inputsInline": true,
         "colour": 230,
-        "tooltip": "tooltip1",
+        "tooltip": "The dense layer is responsible for learning and capturing patterns in the data. It can be thought of as a layer that looks at different aspects of the input data and combines them to make predictions or classifications.",
         "helpUrl": ""
     },
 
@@ -326,7 +324,7 @@ const blocks = [
         ],
         "output": null,
         "colour": 120,
-        "tooltip": "",
+        "tooltip": "A neural network model. ",
         "helpUrl": ""
     },
     {
@@ -356,7 +354,7 @@ const blocks = [
         ],
         "output": null,
         "colour": 120,
-        "tooltip": "",
+        "tooltip": "A transfer learning model based on the Mobilenet model. You can leave the layers blank, or add some if you want. We'll automatically add the input and output layers for you. This model will be faster to train and be less resource intensive. ",
         "helpUrl": ""
     },
 
@@ -547,7 +545,7 @@ javascriptGenerator['prediction-webcam-live'] = function(block) {
 
 javascriptGenerator['prediction-webcam'] = function(block) {
     let value_model = javascriptGenerator.valueToCode(block, 'model', Blockly.JavaScript.ORDER_NONE);
-    return [value_model + ".picturePredict()", Blockly.JavaScript.ORDER_NONE];
+    return ["(await " + value_model + ".picturePredict()).argMax().arraySync() + 1", Blockly.JavaScript.ORDER_NONE];
 }
 
 javascriptGenerator['print'] = function(block) {
@@ -563,7 +561,7 @@ javascriptGenerator['display'] = function(block) {
 javascriptGenerator['repeat_time'] = function(block) {
     let value_int = javascriptGenerator.valueToCode(block, 'interval', Blockly.JavaScript.ORDER_NONE) * 1000;
     let procedure = javascriptGenerator.statementToCode(block, 'procedure');
-    return "setInterval(() => {\n" + procedure + "}, " + value_int + ");\n";
+    return "setInterval(async () => {\n" + procedure + "}, " + value_int + ");\n";
 }
 
 javascriptGenerator.addReservedWords("dataPath, MobileNetv3FeatureVectorModel, Sequential, ImageDataset, Dataset, " +
