@@ -51,6 +51,7 @@ for(let i = 0;i < n;i++) {
     item.classList.add("accordion-item");
     header.classList.add("accordion-header");
     button.classList.add("accordion-button");
+    button.classList.add("collapsed");
     button.setAttribute("data-bs-toggle", "collapse");
     button.setAttribute("data-bs-target", "#collapse" + i);
     button.setAttribute("aria-expanded", "false");
