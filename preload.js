@@ -1,4 +1,4 @@
-/**
+/*
  * namespace for code
  */
 let Code = {};

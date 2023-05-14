@@ -25,6 +25,7 @@
 </head>
 <body>
     <script type="module" src="camera.js"></script>
+    <script type="module" src="help.js"></script>
     <script defer src="custom-dialog.js"></script>
     <div id="content-full">
         <div id="menu" class="menu">
@@ -34,7 +35,8 @@
             <div id="images">
                 <button type="button" id="images-button" class="menu-button btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#images-modal">Images</button>
             </div>
-            <div id="run">
+            <div id="menu-right">
+                <button type="button" id="help-button" class="menu-button btn btn-outline-warning" data-bs-toggle="modal" data-bs-target="#help-modal">Help</button>
                 <button type="button" id="run-button" class="menu-button btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#run-confirm-modal">Run</button>
             </div>
         </div>
@@ -69,6 +71,27 @@
                             <div id="blockly-div"></div>
                         </div>
                     </div>
+                    <div id="help-content">
+                        <div class="modal fade" id="help-modal" aria-labelledby="run-confirm-modal-label" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable modal-xl">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="help-label">Help</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div id="help-modal-body" class="modal-body">
+                                        <p>Here are answers to some of the most common questions: </p>
+                                        <div class="accordion" id="help-accordion">
+
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" id="close-help" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div id="img-content">
                         <div class="modal fade" id="images-modal" tabindex="-1" aria-labelledby="images-modal-label" aria-hidden="true">
                             <div class="modal-dialog modal-dialog-scrollable modal-xl">
@@ -77,7 +100,7 @@
                                         <h5 class="modal-title" id="images-modal-label">Images</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body" id="image-container" class="image-container">
+                                    <div class="modal-body image-container" id="image-container">
                                         <button type="button" id="add-class" class="btn btn-primary">+ Add a class</button>
                                     </div>
                                     <div class="modal-footer">
@@ -111,7 +134,7 @@
                                         <h5 class="modal-title" id="images-webcam-label">Images - My Dataset 1</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
-                                    <div class="modal-body" id="image-webcam-container" class="image-container">
+                                    <div class="modal-body image-container" id="image-webcam-container">
 <!--                                        <div id="webcam-carousel" class="carousel slide">-->
 <!--                                            <div class="carousel-inner">-->
 <!--                                                <div class="carousel-item active" id="webcam-carousel-video">-->
