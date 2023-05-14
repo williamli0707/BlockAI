@@ -3,26 +3,30 @@
 <head>
     <meta http-equiv="Content-Security-Policy"
           content="default-src 'self' 'unsafe-inline'
+          https://code.jquery.com/jquery-3.1.1.min.js
           https://blockly-demo.appspot.com https://cdn.jsdelivr.net
           https://unpkg.com https://ajax.googleapis.com http://localhost:3000
           http://192.9.249.213:3000 https://tfhub.dev https://storage.googleapis.com
           data:;">
 
-    <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.3/jquery.min.js"></script>
+    <script>if (typeof module === 'object') {window.module = module; module = undefined;}</script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
     <script defer id="blockly-script" src="https://unpkg.com/blockly/blockly.min.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.css">
     <script defer src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.js" crossorigin="anonymous"></script>
     <meta charset="UTF-8">
     <script defer src="./toolbox.js"></script>
     <script defer src="./blocks.js"></script>
+    <script>if (window.module) module = window.module;</script>
     <!-- https://developer.mozilla.org/en-US/docs/Web/HTTP/CSP -->
     <link rel="stylesheet" href="styles.css">
     <title>Project Editor</title>
 </head>
 <body>
     <script type="module" src="camera.js"></script>
-    <script type="module" src="camera-predict.js"></script>
     <script type="module" src="help.js"></script>
+    <script defer src="custom-dialog.js"></script>
     <div id="content-full">
         <div id="menu" class="menu">
             <div id="back">
@@ -40,6 +44,29 @@
             <div class="carousel-inner" id="carousel-inner1">
                 <div class="carousel-item active" id="carousel-item1">
                     <div id="content">
+                        <div class="modal fade" id="var-modal" tabindex="-1" aria-labelledby="images-modal-label" aria-hidden="true">
+                            <div class="modal-dialog modal-dialog-scrollable modal-xl">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="var-modal-label">New Variable</h5>
+                                        <button id="var-modal-close" type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body" id="var-modal-container">
+                                        <form onSubmit="return false;">
+                                            <div class="mb-3">
+                                                <label for="var-name" class="col-form-label" id="var-form-msg">New Variable Name:</label>
+                                                <input type="text" class="form-control" id="var-name">
+                                            </div>
+                                        </form>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" id="var-modal-cancel" class="btn btn-secondary">Close</button>
+                                        <button type="button" id="var-modal-okay" class="btn btn-primary">OK</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div id="blockly-container">
                             <div id="blockly-div"></div>
                         </div>
@@ -74,7 +101,7 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body image-container" id="image-container">
-
+                                        <button type="button" id="add-class" class="btn btn-primary">+ Add a class</button>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" id="images-upload-no" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -116,6 +143,7 @@
                                                         <button class="btn btn-primary webcam-ui-button" id="enable-cam">Enable Webcam</button>
                                                         <button type="button" class="btn btn-primary webcam-ui-button disabled" id="capture-webcam">Capture images</button>
                                                     </div>
+                                                    <p id="images-taken-count"></p>
 <!--                                                </div>-->
 <!--                                                <div class="carousel-item" id="images-preview-webcam">-->
 
@@ -163,19 +191,10 @@
                                     <div class="modal-footer">
                                         <button type="button" id="images-preview-no" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                                         <!--                        <button type="button" id="images-preview-yes" class="btn btn-success" data-bs-dismiss="modal">Confirm</button>-->
-                                        <div class="btn-group">
+                                        <div class="btn-group dropup">
                                             <button type="button" class="btn btn-success dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false"> Confirm </button>
-                                            <ul class="dropdown-menu">
-                                                <li>
-                                                    <button id="upload1" class="dropdown-item" data-bs-dismiss="modal">
-                                                        Upload to Class 1
-                                                    </button>
-                                                </li>
-                                                <li>
-                                                    <button id="upload2" class="dropdown-item" data-bs-dismiss="modal">
-                                                        Upload to Class 2
-                                                    </button>
-                                                </li>
+                                            <ul id="upload-list" class="dropdown-menu">
+
                                             </ul>
                                         </div>
                                     </div>
@@ -192,7 +211,7 @@
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
-                                        <p>Do you want to build your code?</p>
+                                        <p>Do you want to run your code?</p>
                                     </div>
                                     <div class="modal-footer">
                                         <button type="button" id="run-confirm-no" class="btn btn-outline-danger" data-bs-dismiss="modal">No</button>
@@ -206,23 +225,11 @@
                 </div>
                 <div id="build-carousel" class="carousel-item">
                     <div id="build-content">
-                        <div id="card-train" class="card border-success border-3 overflow-auto build-card">
-                            <div class="card-header">
-                                Model Training
-                            </div>
-                            <div id="status" class="card-body overflow-auto">
+                        <nav class="navbar navbar-light bg-light">
+                            <span class="navbar-brand mb-0 h1">Building your code</span>
+                        </nav>
+                        <div id="status" class="">
 
-                            </div>
-                        </div>
-                        <div id="card-predict" class="card border-3 build-card">
-                            <div class="card-header">
-                                Predict from webcam
-                            </div>
-                            <div class="card-body" id="predict-body">
-                                <video id="webcam-predict" autoplay muted class="webcam" playing="false"></video>
-                                <button class="btn btn-primary webcam-ui-button disabled" id="enable-cam-predict">Enable Webcam</button>
-                                <p id="prediction">Enable your webcam to start predicting. </p>
-                            </div>
                         </div>
                     </div>
                 </div>

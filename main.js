@@ -1,12 +1,23 @@
-const { app, BrowserWindow, ipcMain, dialog, ipcRenderer} = require('electron')
+const { app, BrowserWindow, ipcMain, dialog} = require('electron')
 const path = require('path');
 const fs = require('fs');
+const Store = require('electron-store');
+const settings = new Store({
+    numClasses: {
+        type: 'number',
+        default: 2
+    },
+    workspace: {
+        default: {}
+    }
+});
+
 WIN_WIDTH = 1280;
 WIN_HEIGHT = 720;
 IMAGES_FOLDER = "images_folder";
-TEMP_FOLDER = "temp_folder"
+PREVIEW_FOLDER = "preview_folder";
 let win;
-NUM_CLASSES = 2;
+let numClasses;
 let extensionList = ["png", "jpg", "jpeg"];
 
 const createHomeWindow = () => {
@@ -39,12 +50,12 @@ app.whenReady().then(() => {
     })
 });
 
-ipcMain.on('go-to-creator', e => {
+ipcMain.on('go-to-creator', () => {
     // win.preload = path.join(__dirname, 'creator.js');
     win.loadFile('creator.html').then();
 });
 
-ipcMain.on('go-to-editor', e => {
+ipcMain.on('go-to-editor', () => {
     win.close();
     win = new BrowserWindow({
         title: "Project Editor",
@@ -59,35 +70,59 @@ ipcMain.on('go-to-editor', e => {
         // titleBarStyle: "hidden"
     })
     win.loadFile('workspace.html').then();
-    win.webContents.openDevTools()
+    win.webContents.openDevTools();
 });
 
-ipcMain.on('go-to-home', e => {
+ipcMain.on('go-to-home', () => {
     win.close();
     createHomeWindow();
 });
 
 deleteTemp = function () {
-    fs.rmSync(path.join(path.join(app.getPath('userData'), TEMP_FOLDER)), { recursive: true, force: true });
+    fs.rmSync(path.join(path.join(app.getPath('userData'), PREVIEW_FOLDER)), { recursive: true, force: true });
 }
 
 ipcMain.on('ensure-folder', (event) => {
+    let num_classes = settings.get("datasets").u.numClasses;
+    event.sender.send('set-num-classes', num_classes);
+    numClasses = num_classes;
+
+    console.log('ensuring: ' + numClasses);
+
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
     if (!fs.existsSync(imagesFolder)) {
         fs.mkdirSync(imagesFolder);
-        fs.mkdirSync(path.join(imagesFolder, "1"));
-        fs.mkdirSync(path.join(imagesFolder, "2"));
     }
 
-    event.sender.send('num-classes', NUM_CLASSES);//TODO: once >2 classes are available
+    let previewFolder = path.join(app.getPath('userData'), PREVIEW_FOLDER);
+    if (!fs.existsSync(previewFolder)) {
+        fs.mkdirSync(previewFolder);
+    }
+
+    for (let i = 1; i <= numClasses; i++) {
+        if (!fs.existsSync(path.join(imagesFolder, i.toString()))) {
+            fs.mkdirSync(path.join(imagesFolder, i.toString()));
+        }
+    }
+});
+
+ipcMain.on('add-class', (event) => {
+    ++numClasses;
+
+    settings.set("datasets.u.numClasses", numClasses);
+
+    fs.mkdirSync(path.join(path.join(app.getPath('userData'), IMAGES_FOLDER), numClasses.toString()));
+
+    event.sender.send('accordion-add', numClasses)
 });
 
 ipcMain.on('load-images', async (event) => {
     try {
         // Get the files as an array
         let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
+        console.log(numClasses);
 
-        for(let i = 1;i <= NUM_CLASSES;i++) {
+        for(let i = 1; i <= numClasses; i++) {
             event.sender.send('accordion-add', i);
             const files = await fs.promises.readdir(path.join(imagesFolder, i.toString()));
             for( const file of files ) {
@@ -101,7 +136,7 @@ ipcMain.on('load-images', async (event) => {
             }
         }
 
-        event.sender.send('done-loading');
+        // event.sender.send('done-loading');
     }
     catch(err) {
         console.log(err);
@@ -112,14 +147,14 @@ ipcMain.on('load-images', async (event) => {
 ipcMain.on('load-preview', async (event) => {
     try {
         // Get the files as an array
-        if (!fs.existsSync(path.join(app.getPath('userData'), TEMP_FOLDER))) {
-            fs.mkdirSync(path.join(app.getPath('userData'), TEMP_FOLDER));
+        if (!fs.existsSync(path.join(app.getPath('userData'), PREVIEW_FOLDER))) {
+            fs.mkdirSync(path.join(app.getPath('userData'), PREVIEW_FOLDER));
         }
 
-        const files = await fs.promises.readdir(path.join(app.getPath('userData'), TEMP_FOLDER));
+        const files = await fs.promises.readdir(path.join(app.getPath('userData'), PREVIEW_FOLDER));
 
         for( const file of files ) {
-            const imagePath = path.join(path.join(app.getPath('userData'), TEMP_FOLDER), file);
+            const imagePath = path.join(path.join(app.getPath('userData'), PREVIEW_FOLDER), file);
             const stat = await fs.promises.stat(imagePath);
             // console.log(file.toString());
             if(stat.isFile() && extensionList.includes(path.extname(imagePath).substring(1))) {
@@ -128,7 +163,7 @@ ipcMain.on('load-preview', async (event) => {
             }
         }
 
-        event.sender.send('done-loading-preview');
+        // event.sender.send('done-loading-preview');
     }
     catch(err) {
         console.log(err);
@@ -140,9 +175,9 @@ ipcMain.on('load-preview', async (event) => {
 ipcMain.handle('temp-to-image', async (event, args) => {
     try {
         new Promise(async (resolve, reject) => {
-            const files = await fs.promises.readdir(path.join(app.getPath('userData'), TEMP_FOLDER));
+            const files = await fs.promises.readdir(path.join(app.getPath('userData'), PREVIEW_FOLDER));
             for (const file of files) {
-                const imagePath = path.join(app.getPath('userData'), TEMP_FOLDER, file);
+                const imagePath = path.join(app.getPath('userData'), PREVIEW_FOLDER, file);
                 const uploadPath = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString(), file);
                 await fs.copyFile(imagePath, uploadPath, (err) => {
                     if (err) {
@@ -162,10 +197,14 @@ ipcMain.handle('temp-to-image', async (event, args) => {
     }
 })
 
+ipcMain.on('save-workspace', (event, args) => {
+    settings.set("workspace", args);
+});
+
 //upload to images folder from a directory
 ipcMain.on('image-upload', (event) => {
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
-    let tempFolder = path.join(app.getPath('userData'), TEMP_FOLDER);
+    let tempFolder = path.join(app.getPath('userData'), PREVIEW_FOLDER);
     if (!fs.existsSync(imagesFolder)) {
         fs.mkdirSync(imagesFolder);
         fs.mkdirSync(path.join(imagesFolder, "1"));
@@ -195,7 +234,7 @@ ipcMain.on('image-upload', (event) => {
 
             const fileName = path.basename(filePath);
             //0 for temp, 1 for images folder
-            uploadPath = path.join(path.join(app.getPath('userData'), TEMP_FOLDER), fileName);
+            uploadPath = path.join(path.join(app.getPath('userData'), PREVIEW_FOLDER), fileName);
 
             // copy file from original location to app data folder
             fs.copyFile(filePath, uploadPath, (err) => {
@@ -211,47 +250,86 @@ ipcMain.on('image-upload', (event) => {
 
 ipcMain.on('webcam-temp', async (event, image) => {
     // console.log(image);
-    let tempFolder = path.join(app.getPath('userData'), TEMP_FOLDER);
+    let tempFolder = path.join(app.getPath('userData'), PREVIEW_FOLDER);
     if (!fs.existsSync(tempFolder)) {
         fs.mkdirSync(tempFolder);
     }
     const data = image.replace(/^data:image\/\w+;base64,/, "");
     const buf = Buffer.from(data, "base64");
-    await fs.writeFile(path.join(tempFolder, new Date().getTime().toString() + ".png"), buf, function(err, res) {
+    await fs.writeFile(path.join(tempFolder, new Date().getTime().toString() + ".png"), buf, function(err) {
         if(err) console.log(err);
     });
 });
 
-ipcMain.on('delete-temp', (event) => {
+ipcMain.on('delete-temp', () => {
     deleteTemp();
 });
 
-ipcMain.handle('load-images-to-model', async (event, tf) => {
+ipcMain.handle('load-images-to-model', async () => {
     console.log('loading images')
     let imagesFolder = path.join(app.getPath('userData'), IMAGES_FOLDER);
-    let cnt = 0;
     let inputs = [], outputs = [];
-    return new Promise(async (resolve, reject) => {
-        const files1 = await fs.promises.readdir(path.join(imagesFolder, "1"));
-        for (const file of files1) {
-            await new Promise((resolve, reject) => {
-                const imagePath = path.join(app.getPath('userData'), IMAGES_FOLDER, "1", file);
-                inputs.push(imagePath);
-                outputs.push(0);
-                resolve();
-            });
+    return new Promise(async (resolve) => {
+        for (let i = 0;i < NUM_CLASSES;i++) {
+            const files = await fs.promises.readdir(path.join(imagesFolder, (i + 1).toString()));
+            for (const file of files) {
+                await new Promise((resolve, reject) => {
+                    const imagePath = path.join(imagesFolder, (i + 1).toString(), file);
+                    inputs.push(imagePath);
+                    outputs.push(i);
+                    resolve();
+                });
+            }
+            // for (let j = 0;j < 500;j++) {
+            //     await new Promise((resolve, reject) => {
+            //         const imagePath = path.join(imagesFolder, (i + 1).toString(), j.toString(), ".jpg");
+            //         inputs.push(imagePath);
+            //         outputs.push(i);
+            //         resolve();
+            //     });
+            // }
+
         }
-        const files2 = await fs.promises.readdir(path.join(imagesFolder, "2"));
-        for (const file of files2) {
-            await new Promise((resolve, reject) => {
-                const imagePath = path.join(app.getPath('userData'), IMAGES_FOLDER, "2", file);
-                inputs.push(imagePath);
-                outputs.push(1);
-                resolve();
-            });
-        }
-        console.log('done loading ' + new Date().getTime());
+        // console.log('done loading ' + new Date().getTime());
         resolve([inputs, outputs]);
+    });
+});
+
+ipcMain.handle('rename-directory', (event, args) => {
+    return new Promise((resolve, reject) => {
+        try {
+            let oldP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString());
+            let newP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[1].toString());
+            console.log('renaming ' + oldP + ' to ' + newP);
+            fs.renameSync(oldP, newP);
+        }
+        catch (err) {
+            console.log(err);
+            reject(err);
+        }
+        resolve();
+    });
+});
+
+ipcMain.handle('delete-directory', (event, args) => {
+    if(numClasses === 2) {
+        throw -1;
+    }
+    numClasses--;
+    settings.set("datasets.u.numClasses", numClasses);
+    // console.log("numclasses is now " + numClasses);
+    // console.log(args)
+    return new Promise((resolve, reject) => {
+        try {
+            let oldP = path.join(app.getPath('userData'), IMAGES_FOLDER, args[0].toString());
+            console.log("deleting: " + oldP);
+            fs.rmSync(oldP, {recursive: true});
+        }
+        catch (err) {
+            console.log(err);
+            reject(err);
+        }
+        resolve();
     });
 });
 
@@ -259,7 +337,29 @@ ipcMain.on('loaded-image-?', (event) => {
     console.log('done loading image in preload');
 });
 
+ipcMain.handle('getPath', () => {
+    return new Promise((resolve) => {
+        resolve(app.getPath("userData"));
+    });
+});
+
+ipcMain.handle('get-workspace', () => {
+    return new Promise((resolve, reject) => {
+        resolve(settings.get("workspace"));
+    });
+})
+
+ipcMain.handle('get-temp-images', async () => {
+    let tmp = await fs.promises.readdir(path.join(app.getPath('userData'), PREVIEW_FOLDER));
+    return tmp.length;
+});
 
 // test
 //TODO: https://developers.google.com/blockly/guides/app-integration/attribution
 //TODO: https://icons8.com/license
+
+//TODO: dark mode
+//TODO: status indicators for code
+//TODO: delete all code stuff when pressing back
+//TODO: stop user from deleting when only 2 classes left
+//TODO:

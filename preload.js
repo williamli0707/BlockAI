@@ -7,17 +7,16 @@ let state = 0;
 const { ipcRenderer } = require('electron');
 const fs = require('fs');
 const path = require("path");
+const {javascriptGenerator} = require("blockly/javascript");
 let classNum = 2, carousel, status;
 let tfLoaded = false;
-let modelTrained = false;
-let trainingDataInputs, trainingDataOutputs;
-let mobilenet, model;
-let predict = -1;
+let dataPath;
 let video, video2;
-const mobilenet_url = "https://tfhub.dev/google/tfjs-model/imagenet/mobilenet_v3_small_100_224/feature_vector/5/default/1";
-// const userData = app.getPath('userData');
+// const { MobileNetv3FeatureVectorModel, Sequential } = require("./models.js");
+// const { ImageDataset, Dataset, DefaultDataset } = require("./datasets.js");
 
-const MOBILE_NET_INPUT_HEIGHT = 224, MOBILE_NET_INPUT_WIDTH = 224;
+
+
 let classNames = ["Class 1", "Class 2"];
 let currWebcamImageCount = 0;
 
@@ -36,7 +35,8 @@ progress bar
 cards: 1 for architecture, another for graphs (tfvis)
 */
 
-window.addEventListener('DOMContentLoaded', () => {
+window.addEventListener('DOMContentLoaded', async () => {
+    dataPath = await ipcRenderer.invoke("getPath");
     video = document.getElementById("webcam");
     video2 = document.getElementById("webcam-predict");
     carousel = new bootstrap.Carousel('#carousel');
@@ -49,12 +49,23 @@ window.addEventListener('DOMContentLoaded', () => {
         Code.back();
     });
 
+    document.getElementById("run-button").addEventListener("click", () => {
+        console.log(javascriptGenerator.workspaceToCode(Code.workspace));
+        console.log(Code.getCode());
+    })
+
     document.getElementById("run-confirm-yes").addEventListener("click", () => {
         carousel.next();
         let starting = document.createElement("div");
         starting.textContent = "Starting up..."
         starting.id = "startup";
         document.getElementById("status").appendChild(starting);
+
+
+
+        console.log(Code.Blockly.serialization.workspaces.save(Code.workspace));
+        Code.save();
+
         window.console.log = function(str) {
             let node = document.createElement("div");
             if (typeof str == 'object') {
@@ -74,18 +85,15 @@ window.addEventListener('DOMContentLoaded', () => {
             tfscript.onload = function() {
                 tfLoaded = true;
                 console.log("Loaded TF script");
-                Code.loadTensorflow();
+                Code.exec();
             }
             console.log("loading tf script");
             tfscript.src = "https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@3.11.0/dist/tf.min.js";
             document.getElementById("build-content").appendChild(tfscript);
         }
-
         console.log("tf script loaded? " + tfLoaded);
         document.getElementById('run-button').classList.add('d-none');
         document.getElementById('images-button').classList.add('d-none');
-
-        // Code.exp();
     });
 
     document.getElementById("images-upload-yes").addEventListener("click", async () => {
@@ -93,10 +101,10 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
     document.getElementById("images-modal").addEventListener("shown.bs.modal", () => {
-        let loading = document.createElement("p");
-        loading.id = "loading";
-        loading.textContent = "Loading...";
-        document.getElementById("image-container").appendChild(loading);
+        // let loading = document.createElement("p");
+        // loading.id = "loading";
+        // loading.textContent = "Loading...";
+        // document.getElementById("image-container").appendChild(loading);
         Code.loadImages();
     });
 
@@ -116,15 +124,26 @@ window.addEventListener('DOMContentLoaded', () => {
         ipcRenderer.send('delete-temp');
     });
 
+    document.getElementById("webcam-preview").addEventListener("shown.bs.modal", async () => {
+        ipcRenderer.send('ensure-folder');
+        document.getElementById("images-taken-count").innerText = await ipcRenderer.invoke("get-temp-images") + " images taken";
+    });
+
+    document.getElementById("webcam-preview").addEventListener("hidden.bs.modal", async () => {
+        document.getElementById("images-taken-count").innerText = "0" + " images taken";
+    });
+
     document.getElementById("capture-webcam").addEventListener("click", () => {
         let canvas = document.createElement("canvas");
         let ctx = canvas.getContext("2d");
-        console.log(video.offsetHeight + " " + video.offsetWidth)
+        // console.log(video.offsetHeight + " " + video.offsetWidth)
         ctx.drawImage(video, 0, 0, 800, 800, 0, 0 ,224, 224); //??
         // console.log(video.naturalWidth + " " + video.naturalHeight);
         let img = canvas.toDataURL("image/png");
+        canvas.remove();
+        currWebcamImageCount++;
+        document.getElementById("images-taken-count").innerText = currWebcamImageCount.toString() + " images taken";
         // console.log(img);
-        ipcRenderer.send('ensure-folder');
         ipcRenderer.send('webcam-temp', img);
     });
 
@@ -132,11 +151,11 @@ window.addEventListener('DOMContentLoaded', () => {
         // document.getElementById("images-webcam-next").classList.add("d-none");
         // document.getElementById("webcam-upload-confirm").classList.remove("d-none");
         // document.getElementById("webcam-back").classList.remove("d-none");
-        let loading = document.createElement("p");
-        loading.id = "loading-preview";
-        loading.textContent = "Loading...";
-        document.getElementById("image-preview-container").appendChild(loading);
-        console.log("next");
+        // let loading = document.createElement("p");
+        // loading.id = "loading-preview";
+        // loading.textContent = "Loading...";
+        // document.getElementById("image-preview-container").appendChild(loading);
+        // console.log("next");
         let previewModal = new bootstrap.Modal(document.getElementById('images-preview'), {});
         previewModal.show();
     });
@@ -145,39 +164,19 @@ window.addEventListener('DOMContentLoaded', () => {
         document.getElementById("images-webcam-next").classList.remove("d-none");
         document.getElementById("webcam-upload-confirm").classList.add("d-none");
         document.getElementById("webcam-back").classList.add("d-none");
-        console.log("prev");
         // webcamCarousel.prev();
     });
 
-    document.getElementById("upload1").addEventListener("click", () => {
-        ipcRenderer.invoke('temp-to-image', ["1"]).then(() => ipcRenderer.send("delete-temp"));
-        let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
-        imageModal.show();
+    document.getElementById("add-class").addEventListener("click", () => {
+        Code.addClass();
     });
-
-    document.getElementById("upload2").addEventListener("click", () => {
-        ipcRenderer.invoke('temp-to-image', ["2"]).then(() => ipcRenderer.send("delete-temp"));
-        let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
-        imageModal.show();
-    });
-
-    document.getElementById("enable-cam-predict").addEventListener("click", () => {
-        if(predict === -1) {
-            predict = 1;
-            Code.predictLoop();
-        }
-        else {
-            predict = -1;
-        }
-    });
-    //TODO multiple classes
     Code.blockly();
 });
 
 ipcRenderer.on('preview-modal', (event) => {
     let previewModal = new bootstrap.Modal(document.getElementById('images-preview'), {});
     let imageModal = new bootstrap.Modal(document.getElementById('images-modal'), {});
-    console.log("closing imageModal " + imageModal.toString())
+    // console.log("closing imageModal " + imageModal.toString())
     previewModal.show();
 });
 
@@ -194,7 +193,7 @@ ipcRenderer.on('call-preview-image', (event, args) => {
     imgNode.classList.add('image-cont');
 
     const deleteNode = document.createElement("button");
-    deleteNode.innerHTML = '<img src="./images/delete-trash.png" class="image-delete"/>';
+    deleteNode.innerHTML = '<img src="./images/trash.svg" class="image-delete"/>';
     deleteNode.classList.add('btn');
     // deleteNode.classList.add('btn-outline-danger');
     deleteNode.classList.add('delete-button');
@@ -224,7 +223,7 @@ ipcRenderer.on('call-preview-image', (event, args) => {
     deleteNode.addEventListener("click", () => {
         item.remove();
         fs.unlinkSync(args[0]);
-        console.log("removing " + args[0]);
+        // console.log("removing " + args[0]);
     });
 });
 
@@ -232,6 +231,7 @@ ipcRenderer.on('accordion-add', (event, args) => {
      let accordionItem = document.createElement("div");
      let heading = document.createElement("h2");
      let button = document.createElement("button");
+     let deleteButton = document.createElement("button");
      let collapse = document.createElement("div");
      let accbody = document.createElement("div");
      let list = document.createElement("ol");
@@ -240,14 +240,18 @@ ipcRenderer.on('accordion-add', (event, args) => {
      button.classList.add('accordion-button');
      button.type = 'button';
      button.setAttribute("data-bs-toggle", "collapse");
-     button.setAttribute("data-bs-target", "#collapse" + args)
-     button.ariaExpanded = "true";
+     button.setAttribute("data-bs-target", "#collapse" + args);
+     button.classList.add("collapsed")
+     button.ariaExpanded = "false";
      button.setAttribute("aria-controls", "collapse" + args);
+     deleteButton.classList.add("btn");
+     deleteButton.setAttribute("state", "0");
+     deleteButton.innerHTML = "<img src=\"./images/trash.svg\" class=\"image-delete accordion-class-delete\" alt=\"Error loading image\"/>";
      collapse.setAttribute("aria-labelledby", "heading" + args);
      collapse.setAttribute("data-bs-parent", "#images-accordion");
      collapse.classList.add('accordion-collapse');
      collapse.classList.add('collapse');
-     collapse.classList.add('show');
+     // collapse.classList.add('show');
      accbody.classList.add('accordion-image-body');
      heading.id = "heading" + args;
      button.id = "button" + args;
@@ -256,8 +260,18 @@ ipcRenderer.on('accordion-add', (event, args) => {
      accbody.id = "accordion-body" + args;
      list.id = "image-list" + args;
      list.classList.add("image-list");
+     deleteButton.addEventListener("click", async () => {
+         if(deleteButton.getAttribute("state") === "0") {
+             deleteButton.setAttribute("state", "1");
+             deleteButton.innerHTML = "<img src=\"./images/x-square-fill.svg\" class=\"image-delete accordion-class-delete\" alt=\"Error loading image\"/>";
+         }
+         else {
+            await Code.deleteClass(args);
+         }
+     })
      accbody.appendChild(list);
      heading.appendChild(button);
+     heading.appendChild(deleteButton);
      collapse.appendChild(accbody);
      accordionItem.appendChild(heading);
      accordionItem.appendChild(collapse);
@@ -276,7 +290,7 @@ ipcRenderer.on('call-display-image', (event, args) => {
     imgNode.classList.add('image-cont');
 
     const deleteNode = document.createElement("button");
-    deleteNode.innerHTML = '<img src="./images/delete-trash.png" class="image-delete"/>';
+    deleteNode.innerHTML = '<img src="./images/trash.svg" class="image-delete"/>';
     deleteNode.classList.add('btn');
     // deleteNode.classList.add('btn-outline-danger');
     deleteNode.classList.add('delete-button');
@@ -306,101 +320,66 @@ ipcRenderer.on('call-display-image', (event, args) => {
     deleteNode.addEventListener("click", () => {
         item.remove();
         fs.unlinkSync(args[0]);
-        console.log("removing " + args[0]);
+        // console.log("removing " + args[0]);
     });
 });
 
-ipcRenderer.on('done-loading', (event) => {
-    document.getElementById("loading").remove();
-});
+// ipcRenderer.on('done-loading', (event) => {
+//     document.getElementById("loading").remove();
+// });
+//
+// ipcRenderer.on('done-loading-preview', (event) => {
+//     document.getElementById("loading-preview").remove();
+// });
 
-ipcRenderer.on('done-loading-preview', (event) => {
-    document.getElementById("loading-preview").remove();
-});
-
-ipcRenderer.on('num-classes', (event, args) => {
+ipcRenderer.on('set-num-classes', (event, args) => {
     classNum = args;
 });
 
-ipcRenderer.on('image-to-model', async (event, args) => {
-    return new Promise((resolve, reject) => {
-        const img = new Image()
-        img.src = args[0];
-        img.onload = async () => {
-            const a = tf.browser.fromPixels(img);
-            await trainingDataInputs.push(a);
-            await trainingDataOutputs.push(args[1]);
-            resolve();
+Code.deleteClass = async (num) => {
+    //check indexing
+    // console.log("in code.deleteclass num = " + num);
+    try {
+        await ipcRenderer.invoke('delete-directory', [num]);
+    } catch (err) {
+        if(err == -1) {
+            //2 classes left
         }
-    })
-});
-
-Code.loadTensorflow = async function() {
-    //TODO
-    mobilenet = await tf.loadGraphModel(mobilenet_url, {fromTFHub: true});
-    console.log("Loaded Mobilenet v3");
-    //warm up the model (??) by passing it through zeros
-    tf.tidy(function () {
-        let answer = mobilenet.predict(tf.zeros([1, 224, 224, 3]));
-        console.log(answer.shape);
-    });
-    model = tf.sequential();
-    model.add(tf.layers.dense({inputShape: [1024], units: 128, activation: 'relu'}));
-    model.add(tf.layers.dense({units: classNum, activation: 'softmax'}));
-    await model.compile({
-        optimizer: 'adam',
-        loss: (classNum === 2) ? 'binaryCrossentropy': 'categoricalCrossentropy',
-        metrics: ['accuracy']
-    });
-
-    await Code.trainAndPredict();
+    }
+    for(let i = num + 1; i <= classNum;i++) {
+        await ipcRenderer.invoke('rename-directory', [i, i - 1]);
+    }
+    classNum--;
+    Code.unloadImages();
+    Code.loadImages();
 }
 
-Code.trainAndPredict = async function() {
-    ipcRenderer.send('ensure-folder');
+Code.getCode = () => {
+    let code = "//const { MobileNetv3FeatureVectorModel, Sequential } = require(\"./models.js\");\n" +
+        "const { ImageDataset, Dataset, DefaultDataset } = require(\"./datasets.js\");\n" +
+        "const path = require('path');\n" +
+        "let userDataPath = '" + dataPath + "';\n" +
+        "function logProgress(epoch, logs) {\n" +
+        "    console.log('Data for epoch ' + epoch);\n" +
+        "    console.log(logs);\n" +
+        "}\n";
+    code += javascriptGenerator.workspaceToCode(Code.workspace);
+    return code;
+}
 
-    trainingDataInputs = [];
-    trainingDataOutputs = [];
-    let res = await ipcRenderer.invoke('load-images-to-model');
-    let inputPaths = res[0];
-    for(let imgPath in inputPaths) {
-        await new Promise((resolve, reject) => {
-            let img = new Image();
-            img.src = inputPaths[imgPath];
-            img.onload = () => {
-                let imageFeatures = tf.tidy(function() {
-                    let videoFrameAsTensor = tf.browser.fromPixels(img);
-                    let resizedTensorFrame = tf.image.resizeBilinear(videoFrameAsTensor, [MOBILE_NET_INPUT_HEIGHT,
-                        MOBILE_NET_INPUT_WIDTH], true);
-                    let normalizedTensorFrame = resizedTensorFrame.div(255);
-                    return mobilenet.predict(normalizedTensorFrame.expandDims()).squeeze();
-                });
-                trainingDataInputs.push(imageFeatures);
-                resolve();
-            }
-        })
-    }
-    trainingDataOutputs = res[1];
+Code.exec = async () => {
+    let sc = document.createElement("script");
+    sc.type = "module";
+    sc.textContent = Code.getCode();
+    document.getElementById("run-content").appendChild(sc);
 
-    ipcRenderer.send('done-loading-?');
-    tf.util.shuffleCombo(trainingDataInputs, trainingDataOutputs);
-    let outputsAsTensor = tf.tensor1d(trainingDataOutputs, 'int32');
-    let oneHotOutputs = tf.oneHot(outputsAsTensor, classNum);
-    let inputsAsTensor = tf.stack(trainingDataInputs);
+    // let sc = document.createElement("script");
+    // sc.src = "./example.js";
+    // document.getElementById("run-content").appendChild(sc);
+}
 
-    let results = await model.fit(inputsAsTensor, oneHotOutputs, {
-        shuffle: true, batchSize: 5, epochs: 10,
-        callbacks: {onEpochEnd: logProgress}
-    });
-
-    outputsAsTensor.dispose();
-    oneHotOutputs.dispose();
-    inputsAsTensor.dispose();
-    modelTrained = true;
-    console.log("Ready to Predict!");
-    document.getElementById("enable-cam-predict").classList.remove("disabled");
-    document.getElementById("card-train").classList.remove("border-success");
-    document.getElementById("card-predict").classList.add("border-success");
+Code.save = function () {
+    ipcRenderer.send("save-workspace", Code.Blockly.serialization.workspaces.save(Code.workspace));
 }
 
 Code.back = function() {
@@ -408,19 +387,16 @@ Code.back = function() {
         require('electron').ipcRenderer.send('go-to-home');
     }
     else {
-        carousel.prev();
-        state = 0;
-        document.getElementById('run-button').classList.remove('d-none');
-        document.getElementById('images-button').classList.remove('d-none');
+        // carousel.prev();
+        // state = 0;
+        // document.getElementById('run-button').classList.remove('d-none');
+        // document.getElementById('images-button').classList.remove('d-none');
+        ipcRenderer.send('go-to-editor');
     }
 }
 
 Code.unloadImages = function() {
-    var imageContainer = document.getElementById('image-container').children;
-
-    while(imageContainer.length) {
-        imageContainer[0].remove();
-    }
+    document.getElementById('images-accordion').remove();
 };
 
 Code.unloadImagesPreview = function() {
@@ -428,27 +404,50 @@ Code.unloadImagesPreview = function() {
     while(imageListPreview.length) {
         imageListPreview[0].remove();
     }
+
+    let imageClassList = document.getElementById("upload-list").children;
+    while(imageClassList.length) {
+        imageClassList[0].remove();
+    }
 }
 
 Code.loadImages = function() {
-    ipcRenderer.send('ensure-folder');
     let accordion = document.createElement("div");
     accordion.classList.add('accordion');
     accordion.id = 'images-accordion';
 
-    document.getElementById("image-container").appendChild(accordion);
+    document.getElementById("image-container").insertBefore(accordion, document.getElementById('add-class'));
 
+    ipcRenderer.send('ensure-folder');
     ipcRenderer.send('load-images');
 }
 
 Code.loadImagesPreview = function() {
-    console.log("loadImagesPreview")
+    for(let i = 1;i <= classNum;i++) {
+        let list = document.createElement("li");
+        let btn = document.createElement("button");
+        btn.id = "upload" + i.toString();
+        btn.classList.add("dropdown-item");
+        btn.setAttribute("data-bs-dismiss", "modal");
+        btn.textContent = "Upload to class " + i.toString();
+        list.appendChild(btn);
+        btn.addEventListener('click', () => {
+            ipcRenderer.invoke('temp-to-image', [i.toString()]).then(() => ipcRenderer.send("delete-temp"));
+        })
+        document.getElementById("upload-list").appendChild(list);
+    }
     ipcRenderer.send('load-preview');
 }
 
 Code.uploadImages = async function(method) {
     ipcRenderer.send('image-upload');
 }
+
+Code.addClass = function() {
+    ipcRenderer.send('add-class');
+    ++classNum;
+}
+
 
 Code.setURL = function(url) {
     Code.xhr.open('GET', url);
@@ -508,60 +507,21 @@ Code.sendHTTPRequest = function(method, url, data) {
 Code.exp = function(){    // export stuff to server
     Code.sendHTTPRequest("POST", "http://192.9.249.213:3000", {
         "Id": 1234,
-        "code": Blockly.JavaScript.workspaceToCode(Code.workspace),
+        "code": javascriptGenerator.workspaceToCode(Code.workspace),
     })
 }
 
-Code.blockly = function() {
+Code.blockly = async function () {
     Code.Blockly = require('blockly');
-    Code.javascriptGenerator = require('blockly/javascript');
-    Code.path = require("path");
     require('@blockly/field-slider');
     const blocklyArea = document.getElementById('blockly-container');
     const blocklyDiv = document.getElementById('blockly-div');
 
     Code.Blockly.defineBlocksWithJsonArray(blocks);
 
-    Blockly.JavaScript['conv2d'] = function(block) {
-        var value_activation = Blockly.JavaScript.valueToCode(block, 'activation', Blockly.JavaScript.ORDER_ATOMIC);
-        // TODO: Assemble JavaScript into code variable.
-        var code = '\ttf.keras.layers.Conv2D(activation=\'' + value_activation + '\'),\n';
-        return code;
-    };
-    Blockly.JavaScript['maxpooling2d'] = function(block) {
-        // TODO: Assemble JavaScript into code variable.
-        var code = '\ttf.keras.layers.MaxPooling2D(),\n';
-        return code;
-    };
-    Blockly.JavaScript['flatten'] = function(block) {
-        // TODO: Assemble JavaScript into code variable.
-        var code = '\ttf.keras.layers.Flatten(),\n';
-        return code;
-    };
-    Blockly.JavaScript['dropout'] = function(block) {
-        var value_rate = Blockly.JavaScript.valueToCode(block, 'rate', Blockly.JavaScript.ORDER_ATOMIC);
-        // TODO: Assemble JavaScript into code variable.
-        var code = '\ttf.keras.layers.Dropout(' + value_rate + '),\n';
-        return code;
-    };
-    Blockly.JavaScript['dense'] = function(block) {
-        var num_neurons = Blockly.JavaScript.valueToCode(block, 'num_neurons', Blockly.JavaScript.ORDER_ATOMIC)
-        var value_activation = Blockly.JavaScript.valueToCode(block, 'activation', Blockly.JavaScript.ORDER_ATOMIC);
-        // TODO: Assemble JavaScript into code variable.
-        var code = '\tcode;\n';
-        return code;
-    };
-
-    Blockly.JavaScript['cnn_model'] = function(block) {
-        var statements_layers = Blockly.JavaScript.statementToCode(block, 'layers');
-        var code = 'model = tf.keras.models.Sequential([\n' + statements_layers + ']);\n';
-        return code;
-    };
-
     Code.workspace = Code.Blockly.inject(blocklyDiv,
         {toolbox: toolbox});
-    console.log(Code.javascriptGenerator)
-    Code.onresize = function(e) {
+    Code.onresize = function (e) {
         // Compute the absolute coordinates and dimensions of blocklyArea.
         let element = blocklyArea;
         let x = 0;
@@ -577,32 +537,15 @@ Code.blockly = function() {
     };
     window.addEventListener('resize', Code.onresize, false);
     Code.onresize();
-}
 
-Code.predictLoop = function () {
-    if(predict === 1) {
-        if (document.getElementById("webcam-predict").getAttribute("playing") === "true") {
-            tf.tidy(function () {
-                let videoFrameAsTensor = tf.browser.fromPixels(video2).div(255);
-                let resizedTensorFrame = tf.image.resizeBilinear(videoFrameAsTensor, [MOBILE_NET_INPUT_HEIGHT,
-                    MOBILE_NET_INPUT_WIDTH], true);
-
-                let imageFeatures = mobilenet.predict(resizedTensorFrame.expandDims());
-                let prediction = model.predict(imageFeatures).squeeze();
-                let highestIndex = prediction.argMax().arraySync();
-                let predictionArray = prediction.arraySync();
-                document.getElementById("prediction").innerText = 'Prediction: ' + classNames[highestIndex] + ' with ' + Math.floor(predictionArray[highestIndex] * 100) + '% confidence';
-            });
+    function saveEvent(event) {
+        if (event.isUiEvent) {
+            return;  // Don't mirror UI events.
         }
-        window.requestAnimationFrame(Code.predictLoop);
+        Code.save();
     }
-}
 
-function delay(time) {
-    return new Promise(resolve => setTimeout(resolve, time));
-}
+    Code.workspace.addChangeListener(saveEvent);
 
-function logProgress(epoch, logs) {
-    console.log('Data for epoch ' + epoch);
-    console.log(logs);
+    Code.Blockly.serialization.workspaces.load(await ipcRenderer.invoke('get-workspace'), Code.workspace);
 }
