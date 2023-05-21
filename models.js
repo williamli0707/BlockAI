@@ -65,8 +65,8 @@ class Sequential {
                         track.stop();
                     });
                     video.srcObject = null;
-                    console.log(ret);
-                    console.log(ret.argMax().arraySync() + " " + Math.floor(ret.arraySync()[ret.argMax().arraySync()] * 100))
+                    // console.log(ret);
+                    // console.log(ret.argMax().arraySync() + " " + Math.floor(ret.arraySync()[ret.argMax().arraySync()] * 100))
                     resolve(ret);
                 });
             });

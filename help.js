@@ -6,6 +6,7 @@ let questions = [
     "What is transfer learning? ",
     "What is overfitting/underfitting? ",
     "How do I get pictures? ",
+    "What does 'loss' and 'acc' mean when training? ",
     "What can I do with AI and image classification? ",
 ];
 let answers = [
@@ -71,6 +72,11 @@ let answers = [
 
     "To get pictures, it's easiest to upload pictures from your webcam. To do this, you can click the \"Images\" button on your workspace, and then click Upload. Select the \"Upload from your webcam\" button, and take some pictures of a type of object! Make sure to get some different angles and different objects which belong to that type. Once you're done, click \"Next\" and then upload to the class number of your choice. It's best to have at least 30 pictures of a type of object in each class. That way, the machine learning model is able to generalize to a class of object better. ",
 
+    "In the context of training a neural network, \"loss\" refers to a measure of how well the network is performing on a specific task. It quantifies the difference between the predicted output of the network and the actual desired output. The goal of training is to minimize this loss, indicating that the network is making accurate predictions.<br>" +
+    "<br>" +
+    "\"Acc\" or \"accuracy\" is a metric that measures how well the network is performing in terms of correctly predicting the desired output. It represents the percentage of correct predictions made by the network over a given set of examples.<br>" +
+    "<br>" +
+    "To summarize, loss measures the deviation between predicted and desired outputs, while accuracy measures the proportion of correct predictions made by the network. The objective is to minimize loss and maximize accuracy during training to ensure the neural network performs well on its intended task.",
 
     "Image classification neural networks can be used to build various simple apps. Here are a few examples:<br>" +
     "<br>" +

@@ -72,6 +72,7 @@ body {
     /*max-height: 100%;*/
     /*bottom: 1%;*/
     /*top: 1%;*/
+    min-width: 100%;
 }
 
 #build-carousel {
@@ -85,9 +86,15 @@ body {
 }
 
 #status {
-    margin: 1%;
     display: flex;
     flex-direction: column;
+    overflow-y: auto;
+    min-height: 100%;
+    min-width: 100%;
+    max-height: 100%;
+    background-color: black;
+    color: limegreen;
+    font-family: "Lucida Console", "Courier New", monospace;
 }
 
 #close-button {

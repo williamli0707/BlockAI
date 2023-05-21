@@ -83,7 +83,7 @@ deleteTemp = function () {
 }
 
 ipcMain.on('ensure-folder', (event) => {
-    let num_classes = settings.get("datasets").u.numClasses;
+    let num_classes = settings.get("datasets") ? settings.get("datasets").user.numClasses : 2;
     event.sender.send('set-num-classes', num_classes);
     numClasses = num_classes;
 
@@ -109,7 +109,7 @@ ipcMain.on('ensure-folder', (event) => {
 ipcMain.on('add-class', (event) => {
     ++numClasses;
 
-    settings.set("datasets.u.numClasses", numClasses);
+    settings.set("datasets.user.numClasses", numClasses);
 
     fs.mkdirSync(path.join(path.join(app.getPath('userData'), IMAGES_FOLDER), numClasses.toString()));
 
@@ -316,7 +316,7 @@ ipcMain.handle('delete-directory', (event, args) => {
         throw -1;
     }
     numClasses--;
-    settings.set("datasets.u.numClasses", numClasses);
+    settings.set("datasets.user.numClasses", numClasses);
     // console.log("numclasses is now " + numClasses);
     // console.log(args)
     return new Promise((resolve, reject) => {

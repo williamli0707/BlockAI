@@ -35,7 +35,6 @@
     "bootstrap": "^5.3.0-alpha1",
     "chokidar": "^3.5.3",
     "drag-drop": "^7.2.0",
-    "electron-builder": "^24.2.0",
     "electron-squirrel-startup": "^1.0.0",
     "electron-store": "^8.1.0",
     "formidable": "^2.1.1",

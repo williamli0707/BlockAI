@@ -40,6 +40,27 @@
                 <button type="button" id="run-button" class="menu-button btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#run-confirm-modal">Run</button>
             </div>
         </div>
+        <div id="help-content">
+            <div class="modal fade" id="help-modal" aria-labelledby="run-confirm-modal-label" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-scrollable modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="help-label">Help</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div id="help-modal-body" class="modal-body">
+                            <p>Here are answers to some of the most common questions: </p>
+                            <div class="accordion" id="help-accordion">
+
+                            </div>
+                        </div>
+                        <div class="modal-footer">
+                            <button type="button" id="close-help" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
         <div id="carousel" class="carousel slide">
             <div class="carousel-inner" id="carousel-inner1">
                 <div class="carousel-item active" id="carousel-item1">
@@ -69,27 +90,6 @@
 
                         <div id="blockly-container">
                             <div id="blockly-div"></div>
-                        </div>
-                    </div>
-                    <div id="help-content">
-                        <div class="modal fade" id="help-modal" aria-labelledby="run-confirm-modal-label" aria-hidden="true">
-                            <div class="modal-dialog modal-dialog-scrollable modal-xl">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="help-label">Help</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div id="help-modal-body" class="modal-body">
-                                        <p>Here are answers to some of the most common questions: </p>
-                                        <div class="accordion" id="help-accordion">
-
-                                        </div>
-                                    </div>
-                                    <div class="modal-footer">
-                                        <button type="button" id="close-help" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
-                                    </div>
-                                </div>
-                            </div>
                         </div>
                     </div>
                     <div id="img-content">
@@ -225,11 +225,8 @@
                 </div>
                 <div id="build-carousel" class="carousel-item">
                     <div id="build-content">
-                        <nav class="navbar navbar-light bg-light">
-                            <span class="navbar-brand mb-0 h1">Building your code</span>
-                        </nav>
                         <div id="status" class="">
-
+                            <div class="navbar-brand mb-0 h1">Building your code</div>
                         </div>
                     </div>
                 </div>
